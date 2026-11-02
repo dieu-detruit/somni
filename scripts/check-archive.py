@@ -10,6 +10,8 @@ def info(path):
         return plistlib.load(f)
 phone = info(apps[0])
 assert phone['CFBundleIdentifier'] == 'com.takafumi.somni'
+for key in ('NSHealthShareUsageDescription', 'NSHealthUpdateUsageDescription'):
+    assert phone.get(key, '').strip(), f'Missing HealthKit purpose string: {key}'
 watches = list((apps[0] / 'Watch').glob('*.app'))
 assert len(watches) == 1, f'Expected embedded Watch app: {watches}'
 watch = info(watches[0])

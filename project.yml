@@ -30,6 +30,7 @@ targets:
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         ITSAppUsesNonExemptEncryption: false
         NSHealthShareUsageDescription: Apple Watchなどの睡眠記録を読み取り、音を流した夜と朝の休息感をふりかえります。ヘルスケアの記録は変更しません。
+        NSHealthUpdateUsageDescription: ヘルスケアの睡眠記録を振り返るためにHealthKitを利用します。現在のバージョンは読み取りのみを要求し、ヘルスケアのデータを追加・変更しません。
         UIBackgroundModes: [audio]
         UILaunchScreen: {}
         UIApplicationSceneManifest:
