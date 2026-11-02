@@ -104,6 +104,7 @@ private struct HistoryView: View {
     private var selectedNight: String { nightSelection.selectedNight }
     private var nights: [String] {
         var values = Set(store.sessions.map(\.nightID) + store.feedback.map(\.nightID))
+        values.insert(selectedNight)
         for day in 0..<7 { if let date = Calendar.current.date(byAdding: .day, value: -day, to: Date()) { values.insert(Night.previous(for: date)) } }
         return values.sorted(by: >)
     }
@@ -155,12 +156,7 @@ private struct HistoryView: View {
                         Label("この夜の音", systemImage: "waveform")
                         if sessions.isEmpty { Text("再生の記録はありません。").foregroundStyle(Palette.muted).font(.subheadline) }
                         ForEach(sessions) { session in
-                            VStack(alignment: .leading, spacing: 7) {
-                                Text(session.settings.mode.title).font(.subheadline.weight(.medium))
-                                Text(session.startedAt.formatted(date: .omitted, time: .shortened) + " · " + (session.endReason == .unknown ? "再生時間不明" : DisplayFormat.duration(session.playedSeconds)) + " · " + (session.endReason?.title ?? "再生中")).font(.caption).foregroundStyle(Palette.muted)
-                                Text("設定: " + session.settings.timerLabel + " / 音量 \(Int(session.settings.volume * 100))%").font(.caption).foregroundStyle(Palette.muted)
-                                if session.changes.count > 1 { Text("途中の設定変更 \(session.changes.count - 1)回").font(.caption).foregroundStyle(Palette.muted) }
-                            }
+                            PlaybackSessionRow(session: session)
                         }
                     }.cardStyle()
                     RecentRatingsView()
@@ -172,6 +168,34 @@ private struct HistoryView: View {
             .onChange(of: scenePhase) { _, phase in if phase == .active { nightSelection.refresh() } }
             .onReceive(NotificationCenter.default.publisher(for: .NSCalendarDayChanged)) { _ in nightSelection.refresh() }
             .onReceive(NotificationCenter.default.publisher(for: UIApplication.significantTimeChangeNotification)) { _ in nightSelection.refresh() }
+        }
+    }
+}
+
+private struct PlaybackSessionRow: View {
+    let session: PlaybackSession
+
+    private var playbackDescription: String {
+        let start: String = session.startedAt.formatted(date: .omitted, time: .shortened)
+        let duration: String = session.endReason == .unknown ? "再生時間不明" : DisplayFormat.duration(session.playedSeconds)
+        let status: String = session.endReason?.title ?? "再生中"
+        return [start, duration, status].joined(separator: " · ")
+    }
+
+    private var settingsDescription: String {
+        let timer: String = session.settings.timerLabel
+        let volume: Int = Int(session.settings.volume * 100)
+        return "設定: \(timer) / 音量 \(volume)%"
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 7) {
+            Text(session.settings.mode.title).font(.subheadline.weight(.medium))
+            Text(playbackDescription).font(.caption).foregroundStyle(Palette.muted)
+            Text(settingsDescription).font(.caption).foregroundStyle(Palette.muted)
+            if session.changes.count > 1 {
+                Text("途中の設定変更 \(session.changes.count - 1)回").font(.caption).foregroundStyle(Palette.muted)
+            }
         }
     }
 }
