@@ -29,19 +29,19 @@ bash scripts/check.sh
 
 共有ロジックのテストと署名なしのiPhone + Watchアーカイブを検証します。実機の音声ルート、通話割り込み、HealthKitデータ同期、Watchのオフライン入力は実機検証が必要です。
 
-## CodemagicとTestFlight
+## TestFlight配信
 
-既存watch-climberと同じApp Store Connect連携名`brain-dump`を参照します。
+watch-climberと同じく、**GitHub ActionsのmacOSランナー + codemagic-cli-tools**を使います。Codemagic Webサービスへの登録は不要です。
 
-1. Codemagicにこの公開リポジトリを追加し、ルートの`codemagic.yaml`を選択。
-2. チームのApp Store Connect連携`brain-dump`が利用可能であることを確認。
-3. Code signing identitiesで上記2つのBundle IDのApp Store用Provisioning Profileを取得。iPhone側はHealthKit capabilityを有効にしたプロファイルが必要です。
-4. App Store ConnectでSomnioのBundle IDとInternalテスターグループを確認。
-5. 最初に`somnio-check`、次に`somnio-testflight`を実行。
+署名用Secretsが既にある `dieu-detruit/brain-dump` の `ci/somnio-testflight` ブランチで、Somnio専用ワークフローを実行します。ソースはこの公開リポジトリの固定コミットからcheckoutし、既存のApp Store Connect APIキーと証明書を再利用します。iPhoneのHealthKit capabilityと両ターゲットのProvisioning Profileを取得してアーカイブし、TestFlightへアップロード、Appleの処理完了を照会します。ユーザー設定済みの内部テスター自動配信を利用します。
 
-`v*`タグをpushすると、CodemagicのWebhook設定後はTestFlightワークフローが起動します。ビルド番号にはCodemagicのプロジェクトビルドカウンター＋1を使います。配信先の既存ビルド番号を超える必要があります。
+- 配信ワークフローの控え: `ci/somnio-testflight.yml`
+- [実際の配信ワークフロー](https://github.com/dieu-detruit/brain-dump/blob/ci/somnio-testflight/.github/workflows/somnio-testflight.yml)
+- ビルド番号: GitHub run number + run attempt
+- 更新時はコードの検証後、配信ワークフローのcheckout refを新しいコミットSHAへ更新します。
+- 秘密値は既存リポジトリ内だけで使用し、このリポジトリへコピーしません。
 
-GitHub Actionsは署名なし検証用です。署名・TestFlight配信はCodemagicが行います。GitHubのrepository secretsは他リポジトリやCodemagicへ自動継承されません。この構成はCodemagic上の既存連携と署名設定を利用し、秘密鍵をGitへ保存しません。
+このリポジトリのGitHub Actionsは署名なし検証用です。`codemagic.yaml`は将来Codemagic Webサービスを使う場合の代替設定として保持していますが、現在の配信経路では使いません。
 
 ## 少しずつ改善する使い方
 

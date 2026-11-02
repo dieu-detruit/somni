@@ -101,6 +101,26 @@ public enum Night {
     }
 }
 
+/// Keeps the latest morning selected until the user explicitly browses an older night.
+public struct HistoryNightSelection: Sendable {
+    public private(set) var selectedNight: String
+    private var currentNight: String
+    private var followsLatest = true
+
+    public init(date: Date = Date(), calendar: Calendar = .current) {
+        let current = Night.previous(for: date, calendar: calendar)
+        currentNight = current; selectedNight = current
+    }
+    public mutating func select(_ nightID: String) {
+        selectedNight = nightID
+        followsLatest = nightID == currentNight
+    }
+    public mutating func refresh(date: Date = Date(), calendar: Calendar = .current) {
+        currentNight = Night.previous(for: date, calendar: calendar)
+        if followsLatest { selectedNight = currentNight }
+    }
+}
+
 public enum SleepStage: String, Codable, CaseIterable, Sendable {
     case inBed, awake, unspecified, core, deep, rem
     public var isAsleep: Bool { self != .inBed && self != .awake }

@@ -38,6 +38,32 @@ final class CoreTests: XCTestCase {
         XCTAssertEqual(Night.key(for: late, calendar: calendar), Night.key(for: morning, calendar: calendar))
     }
 
+    func testMorningSelectionAdvancesAfterAnOvernightRollover() {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+        let bedtime = calendar.date(from: DateComponents(year: 2026, month: 11, day: 2, hour: 23))!
+        let morning = calendar.date(from: DateComponents(year: 2026, month: 11, day: 3, hour: 8))!
+        var selection = HistoryNightSelection(date: bedtime, calendar: calendar)
+        XCTAssertEqual(selection.selectedNight, "2026-11-01")
+        selection.refresh(date: morning, calendar: calendar)
+        XCTAssertEqual(selection.selectedNight, "2026-11-02")
+    }
+
+    func testMorningSelectionPreservesAnExplicitHistoricalNight() {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+        let bedtime = calendar.date(from: DateComponents(year: 2026, month: 11, day: 2, hour: 23))!
+        let morning = calendar.date(from: DateComponents(year: 2026, month: 11, day: 3, hour: 8))!
+        var selection = HistoryNightSelection(date: bedtime, calendar: calendar)
+        selection.select("2026-10-28")
+        selection.refresh(date: morning, calendar: calendar)
+        XCTAssertEqual(selection.selectedNight, "2026-10-28")
+        selection.select("2026-11-02")
+        let nextMorning = calendar.date(byAdding: .day, value: 1, to: morning)!
+        selection.refresh(date: nextMorning, calendar: calendar)
+        XCTAssertEqual(selection.selectedNight, "2026-11-03")
+    }
+
     func testFeedbackReplayCannotOverwriteNewerRating() {
         let newer = MorningFeedback(nightID: "2026-11-02", refreshed: 5, easeOfSleep: 4, note: "rested", updatedAt: origin.addingTimeInterval(50))
         let older = MorningFeedback(nightID: newer.nightID, refreshed: 1, easeOfSleep: 2, note: "", updatedAt: origin)

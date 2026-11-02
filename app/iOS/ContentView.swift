@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 import SomnioCore
 
 private enum Palette {
@@ -95,9 +96,12 @@ private struct TonightView: View {
 
 private struct HistoryView: View {
     @EnvironmentObject private var store: AppStore
+    @Environment(\.scenePhase) private var scenePhase
     @StateObject private var health = HealthSleepReader()
-    @State private var selectedNight = Night.previous()
+    @State private var nightSelection = HistoryNightSelection()
     @State private var showRating = false
+    @State private var ratingNight: String?
+    private var selectedNight: String { nightSelection.selectedNight }
     private var nights: [String] {
         var values = Set(store.sessions.map(\.nightID) + store.feedback.map(\.nightID))
         for day in 0..<7 { if let date = Calendar.current.date(byAdding: .day, value: -day, to: Date()) { values.insert(Night.previous(for: date)) } }
@@ -111,7 +115,7 @@ private struct HistoryView: View {
                 VStack(alignment: .leading, spacing: 22) {
                     Text("目覚めを、ふりかえる。").font(.system(size: 28, weight: .medium, design: .serif))
                     Text("いちばん大切なのは、朝のあなたの感覚。").font(.subheadline).foregroundStyle(Palette.muted)
-                    Picker("夜を選ぶ", selection: $selectedNight) { ForEach(nights, id: \.self) { Text($0 + " の夜").tag($0) } }.tint(Palette.mint)
+                    Picker("夜を選ぶ", selection: Binding(get: { selectedNight }, set: { nightSelection.select($0) })) { ForEach(nights, id: \.self) { Text($0 + " の夜").tag($0) } }.tint(Palette.mint)
                     VStack(alignment: .leading, spacing: 14) {
                         HStack {
                             Label("朝のすっきり感", systemImage: "sun.max")
@@ -123,7 +127,7 @@ private struct HistoryView: View {
                             if let ease = rating.easeOfSleep { Text("寝つき \(ease) / 5").font(.subheadline).foregroundStyle(Palette.muted) }
                             if !rating.note.isEmpty { Text(rating.note).font(.subheadline) }
                         } else { Text("よく休めた？ ひとことだけでも残せます。").font(.subheadline).foregroundStyle(Palette.muted) }
-                        Button(store.rating(for: selectedNight) == nil ? "朝の感覚を記録" : "記録を編集") { showRating = true }.buttonStyle(.borderedProminent).tint(Palette.mint).foregroundStyle(Palette.background)
+                        Button(store.rating(for: selectedNight) == nil ? "朝の感覚を記録" : "記録を編集") { ratingNight = selectedNight; showRating = true }.buttonStyle(.borderedProminent).tint(Palette.mint).foregroundStyle(Palette.background)
                     }.cardStyle()
                     VStack(alignment: .leading, spacing: 15) {
                         HStack { Label("睡眠の記録", systemImage: "bed.double"); Spacer(); if health.loading { ProgressView() } }
@@ -162,8 +166,12 @@ private struct HistoryView: View {
                     RecentRatingsView()
                 }.padding(24)
             }.background(Palette.background).navigationTitle("朝の記録").navigationBarTitleDisplayMode(.inline)
-            .sheet(isPresented: $showRating) { RatingEditor(nightID: selectedNight) }
+            .sheet(isPresented: $showRating) { RatingEditor(nightID: ratingNight ?? selectedNight) }
             .onChange(of: selectedNight) { _, _ in health.message = nil }
+            .onAppear { nightSelection.refresh() }
+            .onChange(of: scenePhase) { _, phase in if phase == .active { nightSelection.refresh() } }
+            .onReceive(NotificationCenter.default.publisher(for: .NSCalendarDayChanged)) { _ in nightSelection.refresh() }
+            .onReceive(NotificationCenter.default.publisher(for: UIApplication.significantTimeChangeNotification)) { _ in nightSelection.refresh() }
         }
     }
 }

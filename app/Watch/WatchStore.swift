@@ -87,6 +87,13 @@ final class WatchStore: NSObject, ObservableObject, WCSessionDelegate {
             if success {
                 errorMessage = nil
                 if let cutoff {
+                    do {
+                        let directory = fileURL.deletingLastPathComponent()
+                        for backup in try FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil)
+                            where backup.lastPathComponent.hasPrefix("watch-unreadable-") {
+                            try FileManager.default.removeItem(at: backup)
+                        }
+                    } catch { errorMessage = "以前の保全ファイルを削除できませんでした。" }
                     for transfer in session?.outstandingUserInfoTransfers ?? [] {
                         if let data = transfer.userInfo["feedback"] as? Data,
                            let event = try? JSONDecoder().decode(MorningFeedback.self, from: data), event.updatedAt < cutoff { transfer.cancel() }

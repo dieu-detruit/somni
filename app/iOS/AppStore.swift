@@ -115,6 +115,13 @@ final class AppStore: ObservableObject {
     }
     func deleteAll() {
         writesBlocked = false
-        mutate { next in next = SavedState(); next.resetAt = Date() }
+        guard mutate({ next in next = SavedState(); next.resetAt = Date() }) else { return }
+        do {
+            let directory = fileURL.deletingLastPathComponent()
+            for backup in try FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil)
+                where backup.lastPathComponent.hasPrefix("records-unreadable-") {
+                try FileManager.default.removeItem(at: backup)
+            }
+        } catch { errorMessage = "記録は初期化しましたが、保全ファイルを削除できませんでした。\(error.localizedDescription)" }
     }
 }
