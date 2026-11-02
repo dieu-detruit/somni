@@ -51,6 +51,7 @@ private struct WatchHomeView: View {
                         Text("記録はWatchに保存されています。接続後に送信します。").font(.caption2).foregroundStyle(.secondary)
                     } else if store.refreshed != nil { Label("記録済み", systemImage: "checkmark.circle").font(.caption2).foregroundStyle(mint) }
                     if let error = store.errorMessage { Text(error).font(.caption2).foregroundStyle(.orange) }
+                    if let syncedAt = store.lastSyncedAt { Text("iPhone同期 " + syncedAt.formatted(date: .abbreviated, time: .shortened)).font(.system(size: 10)).foregroundStyle(.secondary) }
                     Text("詳しい睡眠記録は、iPhoneのSomnioで読み込めます。").font(.caption2).foregroundStyle(.secondary)
                 }.padding(.horizontal, 4)
             }.navigationTitle("Somnio")

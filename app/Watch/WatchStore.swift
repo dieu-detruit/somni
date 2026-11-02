@@ -15,7 +15,13 @@ final class WatchStore: NSObject, ObservableObject, WCSessionDelegate {
     @Published var errorMessage: String?
     private var session: WCSession?
     private let fileURL: URL
-    var summary: WatchSummary { saved.summary ?? WatchSummary(nightID: Night.previous()) }
+    private var writesBlocked = false
+    var summary: WatchSummary {
+        let currentNight = Night.previous()
+        if let summary = saved.summary, summary.nightID == currentNight { return summary }
+        return WatchSummary(nightID: currentNight)
+    }
+    var lastSyncedAt: Date? { saved.summary?.generatedAt }
     var pendingCount: Int { saved.pending.count }
     var refreshed: Int? {
         let local = saved.pending.filter { $0.nightID == summary.nightID }.max {
@@ -30,18 +36,26 @@ final class WatchStore: NSObject, ObservableObject, WCSessionDelegate {
         super.init()
         do {
             try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-            if FileManager.default.fileExists(atPath: fileURL.path) { saved = try JSONDecoder().decode(WatchSavedState.self, from: Data(contentsOf: fileURL)) }
-        } catch { errorMessage = "記録を読み込めませんでした。" }
+            if FileManager.default.fileExists(atPath: fileURL.path) {
+                do { saved = try JSONDecoder().decode(WatchSavedState.self, from: Data(contentsOf: fileURL)) }
+                catch {
+                    do { try FileManager.default.copyItem(at: fileURL, to: directory.appendingPathComponent("watch-unreadable-\(UUID().uuidString).json")) }
+                    catch { writesBlocked = true }
+                    errorMessage = "以前の記録を読み込めませんでした。元のファイルを保全しています。"
+                }
+            }
+        } catch { writesBlocked = true; errorMessage = "記録を読み込めませんでした。" }
         if WCSession.isSupported() { session = .default; session?.delegate = self; session?.activate() }
     }
-    @discardableResult private func persist() -> Bool {
-        do { try JSONEncoder().encode(saved).write(to: fileURL, options: .atomic); return true }
+    @discardableResult private func update(_ body: (inout WatchSavedState) -> Void) -> Bool {
+        guard !writesBlocked else { errorMessage = "保存できないため記録を停止しています。iPhoneと同期して初期化してください。"; return false }
+        var next = saved; body(&next)
+        do { try JSONEncoder().encode(next).write(to: fileURL, options: .atomic); saved = next; return true }
         catch { errorMessage = "記録を保存できませんでした。もう一度お試しください。"; return false }
     }
     func rate(_ value: Int) {
         let event = MorningFeedback(nightID: summary.nightID, refreshed: value)
-        saved.pending.append(event)
-        guard persist() else { saved.pending.removeAll { $0.id == event.id }; return }
+        guard update({ $0.pending.append(event) }) else { return }
         errorMessage = nil; flush()
     }
     func flush() {
@@ -59,21 +73,26 @@ final class WatchStore: NSObject, ObservableObject, WCSessionDelegate {
         guard let data = context["summary"] as? Data else { return }
         do {
             let incoming = try JSONDecoder().decode(WatchSummary.self, from: data)
-            if let raw = context["resetAt"] as? Double {
-                let cutoff = Date(timeIntervalSince1970: raw)
-                if saved.resetAt.map({ cutoff > $0 }) ?? true {
-                    saved.resetAt = cutoff
-                    saved.pending.removeAll { $0.updatedAt < cutoff }
+            let cutoff = (context["resetAt"] as? Double).map { Date(timeIntervalSince1970: $0) }
+            if let cutoff, saved.resetAt.map({ cutoff > $0 }) ?? true { writesBlocked = false }
+            let acknowledged = Set(incoming.acknowledgedFeedbackIDs)
+            let success = update { next in
+                if let cutoff, next.resetAt.map({ cutoff > $0 }) ?? true {
+                    next.resetAt = cutoff
+                    next.pending.removeAll { $0.updatedAt < cutoff }
+                }
+                if next.summary.map({ incoming.generatedAt >= $0.generatedAt }) ?? true { next.summary = incoming }
+                next.pending.removeAll { acknowledged.contains($0.id) }
+            }
+            if success {
+                errorMessage = nil
+                if let cutoff {
                     for transfer in session?.outstandingUserInfoTransfers ?? [] {
                         if let data = transfer.userInfo["feedback"] as? Data,
                            let event = try? JSONDecoder().decode(MorningFeedback.self, from: data), event.updatedAt < cutoff { transfer.cancel() }
                     }
                 }
             }
-            if saved.summary.map({ incoming.generatedAt >= $0.generatedAt }) ?? true { saved.summary = incoming }
-            let acknowledged = Set(incoming.acknowledgedFeedbackIDs)
-            saved.pending.removeAll { acknowledged.contains($0.id) }
-            if persist() { errorMessage = nil }
             flush()
         } catch { errorMessage = "iPhoneの要約を読み込めませんでした。" }
     }

@@ -89,7 +89,10 @@ final class AppStore: ObservableObject {
         }
     }
     func receive(_ rating: MorningFeedback, fromWatch: Bool = false) {
-        if fromWatch && state.receivedEvents.contains(rating.id) { onChange?(); return }
+        if fromWatch && state.receivedEvents.contains(rating.id) {
+            mutate { next in next.receivedEvents.removeAll { $0 == rating.id }; next.receivedEvents.append(rating.id) }
+            return
+        }
         mutate { next in
             if fromWatch { next.receivedEvents.append(rating.id) }
             guard next.resetAt.map({ rating.updatedAt >= $0 }) ?? true else { return }
@@ -108,7 +111,7 @@ final class AppStore: ObservableObject {
         let night = Night.previous(); let sessions = sessions(for: night); let sleep = sleep(for: night)
         return WatchSummary(nightID: night, sleepSeconds: sleep?.selected?.totalSleep,
             playedSeconds: sessions.filter { $0.endReason != .unknown }.reduce(0) { $0 + $1.playedSeconds }, soundTitle: sessions.first?.settings.mode.title,
-            refreshed: rating(for: night)?.refreshed, fetchedAt: sleep?.fetchedAt, acknowledgedFeedbackIDs: state.receivedEvents)
+            refreshed: rating(for: night)?.refreshed, fetchedAt: sleep?.fetchedAt, acknowledgedFeedbackIDs: Array(state.receivedEvents.suffix(256)))
     }
     func deleteAll() {
         writesBlocked = false

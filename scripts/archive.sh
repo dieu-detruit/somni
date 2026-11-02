@@ -3,8 +3,10 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 : "${APPLE_TEAM_ID:?Missing APPLE_TEAM_ID}"
 # Codemagic project counter is shared across workflows.
-: "${PROJECT_BUILD_NUMBER:?Missing Codemagic project build counter}"
-BUILD_NUMBER="$((PROJECT_BUILD_NUMBER + 1))"
+if [[ -z "${BUILD_NUMBER:-}" ]]; then
+  : "${PROJECT_BUILD_NUMBER:?Missing build counter}"
+  BUILD_NUMBER="$((PROJECT_BUILD_NUMBER + 1))"
+fi
 export BUILD_NUMBER
 xcodegen generate
 xcode-project use-profiles --project Somnio.xcodeproj --export-options-plist /tmp/somnio-export-options.plist
