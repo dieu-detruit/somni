@@ -1,0 +1,101 @@
+name: Somnio
+options:
+  minimumXcodeGenVersion: 2.42.0
+  deploymentTarget:
+    iOS: '17.0'
+    watchOS: '10.0'
+  developmentLanguage: ja
+settings:
+  base:
+    SWIFT_VERSION: '5.0'
+    DEVELOPMENT_TEAM: $(APPLE_TEAM_ID)
+    MARKETING_VERSION: '0.1.0'
+    CURRENT_PROJECT_VERSION: 1
+    CODE_SIGN_STYLE: Automatic
+packages:
+  SomnioCore:
+    path: .
+targets:
+  Somnio:
+    type: application
+    platform: iOS
+    sources:
+      - app/iOS
+      - app/Resources
+    info:
+      path: Generated/iOS-Info.plist
+      properties:
+        CFBundleDisplayName: Somnio
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        ITSAppUsesNonExemptEncryption: false
+        NSHealthShareUsageDescription: Apple Watchなどの睡眠記録を読み取り、音を流した夜と朝の休息感をふりかえります。ヘルスケアの記録は変更しません。
+        UIBackgroundModes: [audio]
+        UILaunchScreen: {}
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: false
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+    entitlements:
+      path: app/iOS/Somnio.entitlements
+      properties:
+        com.apple.developer.healthkit: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.takafumi.somni
+        GENERATE_INFOPLIST_FILE: NO
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        TARGETED_DEVICE_FAMILY: '1'
+        SKIP_INSTALL: NO
+        SUPPORTS_MACCATALYST: NO
+    dependencies:
+      - package: SomnioCore
+      - target: SomnioWatch
+        embed: true
+        copy:
+          destination: productsDirectory
+          subpath: $(CONTENTS_FOLDER_PATH)/Watch
+  SomnioWatch:
+    type: application
+    platform: watchOS
+    sources:
+      - app/Watch
+      - app/Resources
+    info:
+      path: Generated/Watch-Info.plist
+      properties:
+        CFBundleDisplayName: Somnio
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        WKApplication: true
+        WKCompanionAppBundleIdentifier: com.takafumi.somni
+        ITSAppUsesNonExemptEncryption: false
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.takafumi.somni.watchkit
+        GENERATE_INFOPLIST_FILE: NO
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        SKIP_INSTALL: YES
+    dependencies:
+      - package: SomnioCore
+  SomnioTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - Tests/SomnioCoreTests
+    dependencies:
+      - target: Somnio
+      - package: SomnioCore
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.takafumi.somni.tests
+        GENERATE_INFOPLIST_FILE: YES
+schemes:
+  Somnio:
+    build:
+      targets:
+        Somnio: all
+        SomnioWatch: all
+    test:
+      targets: [SomnioTests]
+    archive:
+      config: Release

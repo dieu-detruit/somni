@@ -1,0 +1,25 @@
+name: Verify Somnio
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: verify-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  apple-build:
+    runs-on: macos-26
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Prepare XcodeGen
+        run: |
+          xcodebuild -version
+          brew install xcodegen
+      - name: Tests and unsigned companion archive
+        run: bash scripts/check.sh

@@ -1,0 +1,16 @@
+.DS_Store
+.build/
+DerivedData/
+*.xcodeproj/
+*.xcworkspace/
+*.xcresult/
+Generated/
+.superpowers/
+*.ipa
+*.xcarchive/
+.env
+*.p8
+*.p12
+*.mobileprovision
+
+__pycache__/
