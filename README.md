@@ -1,18 +1,27 @@
 # Somnio
 
-翌朝の「疲れが取れた」を少しずつ増やすための、iPhone睡眠音声とApple Watchの朝の記録。
+Sleep sounds for iPhone and a morning journal for Apple Watch. Somnio helps you explore which bedtime sound settings are associated with feeling more rested the next morning.
 
-iPhoneで環境音・モノラルビートを再生し、翌朝に休息感、寝つき、Apple Watchが記録した睡眠を振り返ります。音声の研究には肯定的な結果と否定的な結果があります。自分の記録から合う設定を探すための初版です。
+## Features
 
-- SwiftUI / iOS 17以上 / watchOS 10以上
-- Bundle ID: `com.takafumi.somni` / `com.takafumi.somni.watchkit`
-- Apple Team ID: `XLVLA9AY6A`
-- 端末内保存。アカウント、広告、サーバーへの健康データ送信なし。
-- Watchの標準睡眠記録をHealthKitで取得。夜間の独自リアルタイム睡眠判定は行いません。
+- Play ambient sound with optional monaural beats.
+- Set a sleep timer with a gentle fade-out.
+- Record morning restfulness, ease of falling asleep, and notes.
+- Review playback history alongside sleep records from Apple Health.
+- Record restfulness on Apple Watch and sync it to iPhone.
+- Keep records on your devices, without an account or analytics service.
 
-## 開発
+Audio research has mixed results. Somnio supports personal experimentation and reflection; it does not promise improved sleep or provide medical diagnosis or treatment. Apple Watch sleep stages are estimates.
 
-MacでXcodeとXcodeGenを用意します。
+## Requirements
+
+- iOS 17 or later
+- watchOS 10 or later for the companion app
+- Xcode 26.3 and XcodeGen for development
+
+Enable Apple's sleep tracking on Apple Watch to include sleep records. Grant Somnio read access to sleep data when prompted in the app.
+
+## Development
 
 ```sh
 brew install xcodegen
@@ -21,33 +30,36 @@ xcodegen generate
 open Somnio.xcodeproj
 ```
 
-`Somnio`スキームでiPhoneへインストール。署名チームを選び、Watchへのコンパニオンインストールを有効にしてください。睡眠記録の読み取りはアプリから要求します。Watch側ではAppleの睡眠記録を有効にして装着してください。
+Select the `Somnio` scheme and configure your signing team before installing on a device.
 
 ```sh
 bash scripts/check.sh
 ```
 
-共有ロジックのテストと署名なしのiPhone + Watchアーカイブを検証します。実機の音声ルート、通話割り込み、HealthKitデータ同期、Watchのオフライン入力は実機検証が必要です。
+This runs the shared tests, creates an unsigned iOS archive, and checks the embedded Watch app's identifiers and versions. Audio interruptions, overnight playback, HealthKit synchronization, and Watch connectivity also require device testing.
 
-## TestFlight配信
+## TestFlight
 
-watch-climberと同じく、**GitHub ActionsのmacOSランナー + codemagic-cli-tools**を使います。Codemagic Webサービスへの登録は不要です。
+The `Somnio TestFlight` GitHub Actions workflow builds, signs, uploads, and checks Apple's processing status. Run it manually from the Actions tab or push a `somnio-testflight-*` tag.
 
-署名用Secretsが既にある `dieu-detruit/brain-dump` の `ci/somnio-testflight` ブランチで、Somnio専用ワークフローを実行します。ソースはこの公開リポジトリの固定コミットからcheckoutし、既存のApp Store Connect APIキーと証明書を再利用します。iPhoneのHealthKit capabilityと両ターゲットのProvisioning Profileを取得してアーカイブし、TestFlightへアップロード、Appleの処理完了を照会します。ユーザー設定済みの内部テスター自動配信を利用します。
+Configure these **repository secrets** under **Settings → Secrets and variables → Actions**:
 
-- 配信ワークフローの控え: `ci/somnio-testflight.yml`
-- [実際の配信ワークフロー](https://github.com/dieu-detruit/brain-dump/blob/ci/somnio-testflight/.github/workflows/somnio-testflight.yml)
-- ビルド番号: GitHub run number + run attempt
-- 更新時はコードの検証後、配信ワークフローのcheckout refを新しいコミットSHAへ更新します。
-- 秘密値は既存リポジトリ内だけで使用し、このリポジトリへコピーしません。
+| Secret | Value |
+| --- | --- |
+| `APP_STORE_CONNECT_ISSUER_ID` | Issuer ID for your App Store Connect team API key. |
+| `APP_STORE_CONNECT_KEY_IDENTIFIER` | Key ID for that API key. |
+| `APP_STORE_CONNECT_PRIVATE_KEY` | Complete contents of the API key's `.p8` file, including PEM headers and line breaks. |
+| `CERTIFICATE_PRIVATE_KEY` | PEM private key matching the Apple Distribution signing certificate. This is separate from the API key's `.p8` file. |
 
-このリポジトリのGitHub Actionsは署名なし検証用です。`codemagic.yaml`は将来Codemagic Webサービスを使う場合の代替設定として保持していますが、現在の配信経路では使いません。
+The API key needs permission to manage signing assets and upload builds. Keep private keys in GitHub Secrets; never commit them.
 
-## 少しずつ改善する使い方
+Repository variable `APPLE_TEAM_ID` is set to `XLVLA9AY6A`. Bundle identifiers are configured as:
 
-最初は小さな音で好みの設定を数晩使い、朝に休息感を記録します。寝る時刻や睡眠時間が大きく違う夜は単純比較せず、設定は一度にひとつずつ変えると振り返りやすくなります。Watchの深睡眠時間だけを最大化せず、本人の翌朝の感覚を中心に考えます。
+- iPhone: `com.takafumi.somni`
+- Apple Watch: `com.takafumi.somni.watchkit`
 
-## 調査と設計
+Create the corresponding App Store Connect app and enable automatic distribution for your internal TestFlight group. The workflow fetches signing profiles and enables HealthKit on the iPhone App ID. Build numbers use `1000 + GitHub run number`, followed by the run attempt; they must exceed previously uploaded build numbers.
 
-- [初版設計](docs/superpowers/specs/2026-11-03-somni-design.md)
-- [実装計画](docs/superpowers/plans/2026-11-03-somnio.md)
+## Research
+
+See the [research notes](docs/research/evidence-review.md) for the literature review and implementation rationale.

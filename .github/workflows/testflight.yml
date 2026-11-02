@@ -3,9 +3,6 @@ on:
   workflow_dispatch:
   push:
     tags: ['somnio-testflight-*']
-    branches: ['ci/somnio-testflight']
-    paths:
-      - '.github/workflows/somnio-testflight.yml'
 permissions:
   contents: read
 concurrency:
@@ -20,11 +17,8 @@ jobs:
       APP_BUNDLE_ID: com.takafumi.somni
       WATCH_BUNDLE_ID: com.takafumi.somni.watchkit
     steps:
-      # Existing Secrets stay here. Build only this reviewed immutable source.
       - uses: actions/checkout@v4
         with:
-          repository: dieu-detruit/somni
-          ref: 2d7c00311f61dbf19915cb060fcc29d0b611b46b
           persist-credentials: false
       - name: Prepare build tools
         run: |
@@ -55,14 +49,14 @@ jobs:
           keychain add-certificates
       - name: Archive and export Somnio
         run: |
-          export BUILD_NUMBER="$GITHUB_RUN_NUMBER.$GITHUB_RUN_ATTEMPT"
+          export BUILD_NUMBER="$((1000 + GITHUB_RUN_NUMBER)).$GITHUB_RUN_ATTEMPT"
+          echo "BUILD_NUMBER=$BUILD_NUMBER" >> "$GITHUB_ENV"
           bash scripts/archive.sh
       - name: Upload to TestFlight and verify processing
         env:
           APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
           APP_STORE_CONNECT_KEY_IDENTIFIER: ${{ secrets.APP_STORE_CONNECT_KEY_IDENTIFIER }}
           APP_STORE_CONNECT_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
-          BUILD_NUMBER: ${{ github.run_number }}.${{ github.run_attempt }}
         run: |
           app-store-connect publish --path '/tmp/somnio-export/*.ipa'
           python scripts/verify-testflight.py
