@@ -28,3 +28,7 @@ Prefer a conservative attenuation/stop controller over automatic escalation of s
 Compare adaptive playback with a fixed condition and, if feasible, a matched replay of an earlier control sequence. Replay helps separate the value of timing from merely hearing less or different audio; it is imperfect because nights differ. Assess assigned-condition outcomes and actual exposure separately. Judge morning restfulness, sleep disturbance and daytime function, not just apparent closed-loop activity.
 
 [Diep et al. (2021)](https://pubmed.ncbi.nlm.nih.gov/33639484/) is a promising physiological-stimulation lead, but its EEG-related timing and automated device are prerequisites of that study, not capabilities already supplied by the current Watch app. Fixed tonal beating and a 14-second swell do not reproduce it.
+
+## Slow-scale control and identification
+
+The [I/O formulation](audio-methods-and-control-model.md) treats minute-scale audio decisions, delayed stage estimates and morning outcomes separately. Its five-minute block is a provisional engineering timescale, not a measured Watch delivery guarantee. Fixed-night experiments can precede and inform within-night adaptation.
