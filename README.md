@@ -62,4 +62,6 @@ Create the corresponding App Store Connect app and enable automatic distribution
 
 ## Research
 
-See the [research notes](docs/research/evidence-review.md) for the literature review and implementation rationale.
+See the [evidence review](docs/research/evidence-review.md) for study-level findings and limitations, and the [experiment roadmap](docs/research/experiment-roadmap.md) for prioritized hypotheses and proposed personal comparisons. These are research proposals, not implemented features or efficacy claims.
+
+The [documentation index](docs/README.md) also describes the current architecture.
