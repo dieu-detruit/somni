@@ -4,16 +4,15 @@ Status: proposals for discussion, not implemented features. Updated 2026-11-03.
 
 ## Objective
 
-Increase next-morning restfulness without worsening sleep continuity, daytime sleepiness, or burden. See the [evidence review](evidence-review.md) for sources and appraisal limitations. The priorities below are engineering judgments informed by that evidence, not established treatment rankings.
+Run a single-participant research program: find audio conditions that reproducibly improve next-morning restfulness for the participant, without worsening sleep continuity, daytime sleepiness, or burden. Population efficacy and productization are not current goals. Only audio properties and their playback policy are intervention variables; breathing exercises, spoken guidance and other behavioral interventions are out of scope. Context is recorded as a potential confound, not deliberately manipulated. See the [evidence review](evidence-review.md) for sources and appraisal limitations. The priorities below are engineering judgments informed by that evidence, not established treatment rankings.
 
 | Priority | Route | Why it is testable | Main uncertainty | First useful comparison |
 | --- | --- | --- | --- | --- |
 | 1 | Comfortable, short wind-down audio | Fits current speaker/timer architecture; subjective music outcomes are promising | Current synthesized ambience is not the prerecorded music studied | Fixed 30-minute current ambience versus no added audio |
 | 2 | Monaural beat as an add-on | Current app already offers a 4 Hz physical beat | Specific sleep/recovery benefit beyond carrier sound unproven | Same ambience, timer and comparable perceived loudness, beat on versus off |
-| 3 | Short breathing/relaxation guidance | Targets bedtime arousal; low implementation cost | Pilot physiology is weak evidence for recovery; forcing pace can be uncomfortable | Same audio with versus without optional comfortable guidance |
 | 4 | Noise masking only when noise is a problem | Plausible benefit under disruptive environmental noise | Continuous noise can itself worsen sleep; acoustic exposure is unknown | Reduce external noise first; otherwise a separately designed short, low-level masking test |
 | Later | Retrospective personalization | Could choose the most tolerable repeatable settings | Sparse data, confounding and overfitting | Replicate an apparent winner on new randomized nights before recommending it |
-| Defer | Watch-triggered overnight sound / EEG-phase stimulation | Interesting future research | Watch stages are not live EEG phase; physiological and practical prerequisites missing | Feasibility study before efficacy study; no overnight control feature yet |
+| Parallel research | Real-time feedback controlling audio | A central research interest; separate acquisition feasibility from benefit | Sensor freshness, availability, artifacts and delay; Watch stages are not EEG phase | Log usable inputs first, then compare adaptive and matched fixed/replayed audio |
 
 ## Recommended sequence
 
@@ -37,9 +36,13 @@ Only if audio is tolerable, compare ambience alone with the same ambience plus m
 
 Do not vary frequencies nightly to chase the prior morning's rating. The current 180/184 Hz carrier pair is an experimental implementation choice, not a literature-established optimum. Comfort and speaker playback feasibility should be checked before a frequency sweep is even considered.
 
-### Step 3: compare one wind-down addition
+### Parallel track: real-time feedback
 
-An optional brief, comfortable breathing/relaxation cue is a reasonable next feasibility test, or a personally pleasant non-intrusive sound alternative. A 5–10 minute introduction is a product hypothesis, not the 30-minute research intervention. Avoid breath holds and pressure to hit a target; stop guidance if uncomfortable. Track burden and bedtime arousal, then check whether any change persists to morning. Do not interpret a higher HRV reading during paced breathing as recovery.
+This is an active research direction, not dismissed as low value. Begin with acquisition feasibility while fixed-audio comparisons continue. See [feedback feasibility](feedback-feasibility.md). Only the audio output is manipulated. Distinguish a tolerability controller (e.g. reduce sound after a reliable disturbance signal) from a sleep-stage controller and from EEG-phase stimulation. They need different measurements and evidence.
+
+### Before any new stimulus
+
+Audit the [current waveform](current-audio-audit.md). The synthetic wave-like swell and the 4-Hz tonal beat have independent parameters and no direct efficacy validation. A component comparison (steady versus swelling ambience, beat off) can precede the beat comparison if it answers the participant's most relevant question. These are available research choices, not a mandatory fixed order.
 
 ## Analysis and decisions
 

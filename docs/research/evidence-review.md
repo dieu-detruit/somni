@@ -15,8 +15,8 @@ Access is stated below. An abstract-level review cannot establish all allocation
 1. **Prioritize a short, comfortable wind-down session and measure morning outcomes.** This is more directly feasible than overnight physiological stimulation. Music studies support perceived sleep quality more consistently than objective changes.
 2. **Keep monaural beats as a controlled experimental addition.** Plausibility and acute psychological findings do not establish improved sleep or morning recovery.
 3. **Treat continuous noise as environment-dependent.** Sound that masks traffic can also disrupt sleep. Do not assume all-night playback or a particular noise color is beneficial.
-4. **Explore comfortable breathing guidance separately.** Small studies and physiological signals justify a low-cost feasibility test, not an efficacy claim.
-5. **Defer EEG-phase stimulation.** Its hardware requirements and outcome uncertainty do not fit the current phone-and-Watch setup.
+4. **Keep guidance outside the current experimental scope.** Breathing findings below remain background evidence and do not define an active intervention.
+5. **Investigate real-time audio feedback as a parallel feasibility track.** EEG-phase stimulation has distinct hardware requirements and must not be conflated with Watch-informed adaptation.
 
 ## Evidence ledger
 
@@ -65,3 +65,9 @@ Access is stated below. An abstract-level review cannot establish all allocation
 No selected study establishes the optimal speaker-based monaural frequency, carrier, level or duration for morning restfulness. No evidence here establishes that personalized frequency optimization outperforms comfortable ordinary audio. Pleasantness, expectations, bedtime ritual and masking remain plausible overlapping contributors. A good first night is encouraging but cannot distinguish them from ordinary night-to-night variation.
 
 Priority full-text follow-up: N3/N4 exposure calibration and counterbalancing, M1 adherence/control delivery, B1/B2 allocation and carryover. Preserve effect definitions and confidence intervals when extracting these; do not substitute significant within-group changes for a between-condition result.
+
+## Additional closed-loop evidence
+
+**C3 — Diep et al., 2021.** [Consecutive-night acoustic stimulation in chronically short sleepers](https://pubmed.ncbi.nlm.nih.gov/33639484/), DOI 10.1016/j.sleep.2021.01.044. **Access: abstract.** Twenty-five adults, randomized double-blind crossover, automated device with up-phase-triggered tones and sleep-stage/arousal gating, two consecutive nights. Participants reported better daytime alertness and objective attention improved after two nights; responses varied substantially. This is positive evidence relevant to the recovery goal, rather than memory alone. It does not establish benefit from a fixed beat or a Watch-only controller, and does not justify deliberately restricting sleep. Several authors had device-industry affiliations.
+
+The current research scope is audio-only single-participant reproducibility. See the [current audio audit](current-audio-audit.md) for why the existing synthetic wave and carrier parameters must be treated as engineering hypotheses.
