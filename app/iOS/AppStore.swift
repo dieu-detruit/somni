@@ -23,6 +23,11 @@ final class AppStore: ObservableObject {
     init() {
         let directory = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0].appendingPathComponent("Somnio", isDirectory: true)
         fileURL = directory.appendingPathComponent("records.json")
+        let exportDirectory = ExportCoordinator.temporaryDirectory
+        if FileManager.default.fileExists(atPath: exportDirectory.path) {
+            do { try FileManager.default.removeItem(at: exportDirectory) }
+            catch { errorMessage = "以前の書き出し一時ファイルを削除できませんでした。" }
+        }
         do {
             try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
             if FileManager.default.fileExists(atPath: fileURL.path) {
@@ -106,6 +111,8 @@ final class AppStore: ObservableObject {
         writesBlocked = false
         guard mutate({ next in next = StoredRecords(); next.resetAt = Date() }) else { return }
         do {
+            let exportDirectory = ExportCoordinator.temporaryDirectory
+            if FileManager.default.fileExists(atPath: exportDirectory.path) { try FileManager.default.removeItem(at: exportDirectory) }
             let directory = fileURL.deletingLastPathComponent()
             for backup in try FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil)
                 where backup.lastPathComponent.hasPrefix("records-unreadable-") {

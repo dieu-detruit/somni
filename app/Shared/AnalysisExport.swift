@@ -98,9 +98,13 @@ public enum AnalysisEncoding {
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .custom { decoder in
             let text = try decoder.singleValueContainer().decode(String.self)
-            let formatter = ISO8601DateFormatter(); formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-            guard let date = formatter.date(from: text) else { throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Invalid ISO-8601 date")) }
-            return date
+            let formatter = ISO8601DateFormatter()
+            guard let dot = text.firstIndex(of: "."), text.hasSuffix("Z"),
+                  let base = formatter.date(from: String(text[..<dot]) + "Z"),
+                  let fraction = Double("0" + String(text[dot..<text.index(before: text.endIndex)])) else {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Invalid ISO-8601 date"))
+            }
+            return base.addingTimeInterval(fraction)
         }
         return decoder
     }

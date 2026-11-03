@@ -37,12 +37,36 @@ final class JournalExportTests: XCTestCase {
             XCTAssertTrue(signal.isFinished)
         }
     }
-    func testOldStoredStateMigratesWithoutLosingRatings() throws {
-        let old = Data(#"{"settings":{"mode":"ambience","volume":0.2,"timerMinutes":30},"sessions":[],"feedback":[],"sleep":[],"receivedEvents":[],"resetAt":null}"#.utf8)
+    func testOldStoredStateMigratesWithoutLosingRecords() throws {
+        let old = Data(#"""
+        {
+          "settings":{"mode":"beat","volume":0.3,"timerMinutes":30},
+          "sessions":[{"id":"11111111-1111-1111-1111-111111111111","nightID":"2026-01-02","startedAt":1000,"endedAt":2800,"playedSeconds":1800,"endReason":"timer","changes":[{"id":"22222222-2222-2222-2222-222222222222","at":1000,"settings":{"mode":"beat","volume":0.3,"timerMinutes":30}}]}],
+          "feedback":[{"id":"33333333-3333-3333-3333-333333333333","nightID":"2026-01-02","refreshed":4,"easeOfSleep":3,"note":"synthetic note","createdAt":3000,"updatedAt":3100}],
+          "sleep":[{"id":"2026-01-02","selectedSourceID":"watch","fetchedAt":3200,"summaries":[{"sourceID":"watch","fetchedAt":3200,"samples":[{"id":"sample-1","start":1000,"end":2800,"stage":"core","sourceID":"watch","sourceName":"Synthetic Watch","isAppleWatch":true}]}]}],
+          "receivedEvents":["33333333-3333-3333-3333-333333333333"],"resetAt":500
+        }
+        """#.utf8)
         let state = try JSONDecoder().decode(StoredRecords.self, from: old)
         XCTAssertTrue(state.journal.isEmpty)
-        XCTAssertEqual(state.settings.volume, 0.2)
         XCTAssertEqual(state.schemaVersion, 2)
+        XCTAssertEqual(state.settings.volume, 0.3)
+        XCTAssertEqual(state.sessions.first?.audioVersion, "1")
+        XCTAssertEqual(state.sessions.first?.changes.first?.settings.beatRateHz, 4)
+        XCTAssertEqual(state.sessions.first?.playedSeconds, 1800)
+        XCTAssertEqual(state.feedback.first?.note, "synthetic note")
+        XCTAssertEqual(state.sleep.first?.selected?.samples.first?.id, "sample-1")
+        XCTAssertEqual(state.sleep.first?.selected?.totalSleep, 1800)
+        XCTAssertEqual(state.receivedEvents.count, 1)
+        XCTAssertEqual(state.resetAt, Date(timeIntervalSinceReferenceDate: 500))
+        let roundTrip = try JSONDecoder().decode(StoredRecords.self, from: JSONEncoder().encode(state))
+        XCTAssertEqual(roundTrip.sessions.first?.id, state.sessions.first?.id)
+        XCTAssertEqual(roundTrip.sessions.first?.changes.first?.id, state.sessions.first?.changes.first?.id)
+        XCTAssertEqual(roundTrip.feedback, state.feedback)
+        XCTAssertEqual(roundTrip.sleep.first?.selectedSourceID, "watch")
+        XCTAssertEqual(roundTrip.sleep.first?.fetchedAt, state.sleep.first?.fetchedAt)
+        XCTAssertEqual(roundTrip.receivedEvents, state.receivedEvents)
+        XCTAssertEqual(roundTrip.resetAt, state.resetAt)
     }
     func testJournalValidatesIntervalsAndSeverity() throws {
         let start = Date(timeIntervalSince1970: 100)
@@ -60,6 +84,12 @@ final class JournalExportTests: XCTestCase {
         XCTAssertTrue(text.contains("2023-11-14T22:13:20"))
         let decoder = AnalysisEncoding.decoder()
         XCTAssertEqual(try decoder.decode(JournalEvent.self, from: data).note, event.note)
+    }
+    func testISOExportRetainsSubmillisecondTimestamps() throws {
+        let original = Date(timeIntervalSince1970: 1_700_000_000.1234567)
+        let event = try JournalEvent(kind: .bedtime, start: original)
+        let decoded = try AnalysisEncoding.decoder().decode(JournalEvent.self, from: AnalysisEncoding.json(event))
+        XCTAssertEqual(decoded.start.timeIntervalSince1970, original.timeIntervalSince1970, accuracy: 0.000001)
     }
     func testCSVQuotesCommasQuotesAndNewlines() {
         XCTAssertEqual(CSV.row(["plain", "a,b", "say \"yes\"", "a\nb"]), "plain,\"a,b\",\"say \"\"yes\"\"\",\"a\nb\"\r\n")
