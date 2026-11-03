@@ -27,7 +27,7 @@ A five-minute heart-rate-minus-3% example found in a review refers to **vibratio
 
 The current released app exposes two modes: swelling ambience, and the same ambience plus a fixed 4-Hz monaural beat. It cannot independently disable the swell, select a new beat rate, or perform feedback control.
 
-Recommended low-burden candidate: keep yesterday's ambience, timer, volume, placement and ordinary routine; change only beat on versus off. If preserving the apparently comfortable night is more important tonight, repeat the exact prior setting as a reference instead. One night either way is a pilot observation, not a causal result. Do not compare a changed wave envelope and changed beat frequency on the same night and attribute the outcome to frequency.
+Use a comfortable beat-containing setting as the reference when that is the preferred experience. There is no scientific necessity to prioritize a beat-off or background-only night in informal exploration. Keep the previous comfortable preset available; explore a beat variation first when desired. A single night's response is useful feedback but not a causal result. Record selected changes and comfort without imposing a burdensome protocol. Beat-off remains a candidate for later optimization, not a required first step.
 
 For a subsequent build, independently switchable swell and beat controls would allow: (A) steady filtered noise, (B) the same noise with the existing 0.07-Hz swell, then separate beat-rate comparisons. The 14.29-second envelope is a baseline engineering choice, not a paper-derived optimum. Preserve versioned existing presets; match perceived loudness as well as practicable and log differences.
 

@@ -14,7 +14,15 @@ Run a single-participant research program: find audio conditions that reproducib
 | Later | Retrospective personalization | Could choose the most tolerable repeatable settings | Sparse data, confounding and overfitting | Replicate an apparent winner on new randomized nights before recommending it |
 | Parallel research | Real-time feedback controlling audio | A central research interest; separate acquisition feasibility from benefit | Sensor freshness, availability, artifacts and delay; Watch stages are not EEG phase | Log usable inputs first, then compare adaptive and matched fixed/replayed audio |
 
-## Recommended sequence
+## Comfort-led exploration
+
+Immediate comfort and next-morning recovery take precedence over an ideal experimental sequence. This is informal personal exploration, not a publication-ready trial. There is no mandatory requirement to start with silence, ambience alone, or a beat-off condition. A tolerable beat-containing setting can be the reference, and preferred beat variations can be explored first. Beat-off remains an optional candidate if later experience makes it useful, rather than a prerequisite.
+
+Prioritize beat parameters and independently adjustable background level. Keep a comfortable reference preset available and avoid changing a successful setting merely to satisfy a study schedule. Background alternatives can be explored separately, but background-only playback need not be the first comparator. Changes may be chosen by preference; label those records as exploratory rather than claiming randomized causal estimates.
+
+A minimal useful record is the setting/version, whether it felt comfortable, morning restfulness, and any sound-related disturbance. Randomization, neutral labels and replication are optional tools when uncertainty warrants the burden. If formal evidence is later needed, design a separate prospective study instead of retroactively presenting convenience data as a controlled trial.
+
+## Optional comparison tools (not a required sequence)
 
 ### Step 0: make outcomes trustworthy
 
@@ -32,7 +40,7 @@ This estimates the value of the whole listening routine, including expectation a
 
 ### Step 2: isolate the beat's added value
 
-Only if audio is tolerable, compare ambience alone with the same ambience plus monaural beat on another preassigned set of nights. Do not simultaneously change carrier, noise color, timer and volume. Use neutral A/B labels with consent and record which condition the listener thinks occurred: audible beats can break masking. There is no guaranteed placebo-equivalent audio.
+When an incremental beat-effect question becomes useful, compare matched audio with and without beats. Before then, a comfortable beat-containing reference can be compared with another beat setting. Do not simultaneously change carrier, noise color, timer and volume. Use neutral A/B labels with consent and record which condition the listener thinks occurred: audible beats can break masking. There is no guaranteed placebo-equivalent audio.
 
 Do not vary frequencies nightly to chase the prior morning's rating. The current 180/184 Hz carrier pair is an experimental implementation choice, not a literature-established optimum. Comfort and speaker playback feasibility should be checked before a frequency sweep is even considered.
 

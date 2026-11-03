@@ -39,6 +39,6 @@ No reviewed study directly validates this exact waveform, spectrum, modulation d
 
 ## Parameters worth separating in personal experiments
 
-First compare this ambience with/without its slow swell, with beats off. Then compare the same base with beats on/off. These answer different questions. Equal peak settings do not guarantee equal perceived loudness; document loudness matching and its limitations. Keep timer and device placement stable. Only later compare different carriers, beat rates, spectra or duration, one contrast at a time.
+Possible comparisons include ambience with/without its slow swell and matched sound with beats on/off. These are optional diagnostic comparisons, not a required order. Comfort-led exploration may instead begin with variations of a preferred beat-containing reference and a separately adjustable background level. These answer different questions. Equal peak settings do not guarantee equal perceived loudness; document loudness matching and its limitations. Keep timer and device placement stable. Only later compare different carriers, beat rates, spectra or duration, one contrast at a time.
 
 Component preview/solo, independently switchable swell and tone layers, a sample-rate-independent filter, preset versioning and actual exposure logs would make future experiments interpretable. These are proposed changes, not current controls. Preserve the current preset as a versioned reference rather than silently changing the stimulus between nights.
