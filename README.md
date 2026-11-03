@@ -5,9 +5,11 @@ Sleep sounds for iPhone and a morning journal for Apple Watch. Somnio helps you 
 ## Features
 
 - Play ambient sound with optional monaural beats.
-- Set a sleep timer with a gentle fade-out.
+- Adjust ambience and beat levels independently, explore beat rates, and set a sleep timer with a gentle fade-out.
 - Record morning restfulness, ease of falling asleep, and notes.
+- Record sleepiness, bedtime, naps, and morning return-to-sleep intervals.
 - Review playback history alongside sleep records from Apple Health.
+- Export timestamped JSON and CSV files for personal analysis through the iOS share sheet.
 - Record restfulness on Apple Watch and sync it to iPhone.
 - Keep records on your devices, without an account or analytics service.
 
@@ -63,5 +65,7 @@ Create the corresponding App Store Connect app and enable automatic distribution
 ## Research
 
 See the [evidence review](docs/research/evidence-review.md) for study-level findings and limitations, and the [experiment roadmap](docs/research/experiment-roadmap.md) for prioritized hypotheses and proposed personal comparisons. These are research proposals, not implemented features or efficacy claims.
+
+See [analysis export](docs/analysis-export.md) for data scope and interpretation.
 
 The [documentation index](docs/README.md) also describes the current architecture.

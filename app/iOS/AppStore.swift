@@ -2,26 +2,9 @@ import Foundation
 import Combine
 import SomnioCore
 
-struct NightSleepRecord: Codable, Identifiable {
-    var id: String
-    var summaries: [SleepSummary]
-    var selectedSourceID: String?
-    var fetchedAt: Date
-    var selected: SleepSummary? { summaries.first { $0.sourceID == selectedSourceID } ?? summaries.first }
-}
-
-private struct SavedState: Codable {
-    var settings = SoundSettings()
-    var sessions: [PlaybackSession] = []
-    var feedback: [MorningFeedback] = []
-    var sleep: [NightSleepRecord] = []
-    var receivedEvents: [UUID] = []
-    var resetAt: Date? = nil
-}
-
 @MainActor
 final class AppStore: ObservableObject {
-    @Published private var state = SavedState()
+    @Published private var state = StoredRecords()
     @Published var errorMessage: String?
     var onChange: (() -> Void)?
     private let fileURL: URL
@@ -30,6 +13,12 @@ final class AppStore: ObservableObject {
     var sessions: [PlaybackSession] { state.sessions }
     var feedback: [MorningFeedback] { state.feedback }
     var resetAt: Date? { state.resetAt }
+    var journal: [JournalEvent] { state.journal }
+    var exportSnapshot: StoredRecords { state }
+    @discardableResult func saveJournal(_ event: JournalEvent) -> Bool {
+        mutate { next in next.journal.removeAll { $0.id == event.id }; next.journal.append(event) }
+    }
+    @discardableResult func deleteJournal(_ id: UUID) -> Bool { mutate { $0.journal.removeAll { $0.id == id } } }
 
     init() {
         let directory = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0].appendingPathComponent("Somnio", isDirectory: true)
@@ -37,7 +26,7 @@ final class AppStore: ObservableObject {
         do {
             try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
             if FileManager.default.fileExists(atPath: fileURL.path) {
-                do { state = try JSONDecoder().decode(SavedState.self, from: Data(contentsOf: fileURL)) }
+                do { state = try JSONDecoder().decode(StoredRecords.self, from: Data(contentsOf: fileURL)) }
                 catch {
                     // Preserve the unreadable original before allowing any replacement writes.
                     let backup = directory.appendingPathComponent("records-unreadable-\(UUID().uuidString).json")
@@ -52,10 +41,10 @@ final class AppStore: ObservableObject {
             }
         } catch { writesBlocked = true; errorMessage = "記録を読み込めませんでした。\(error.localizedDescription)" }
     }
-    private func write(_ next: SavedState) throws {
+    private func write(_ next: StoredRecords) throws {
         try JSONEncoder().encode(next).write(to: fileURL, options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
     }
-    @discardableResult private func mutate(_ body: (inout SavedState) -> Void) -> Bool {
+    @discardableResult private func mutate(_ body: (inout StoredRecords) -> Void) -> Bool {
         guard !writesBlocked else { errorMessage = "保存を停止しています。「このアプリ」で記録を削除すると初期化できます。"; return false }
         var next = state; body(&next)
         do { try write(next); state = next; onChange?(); return true }
@@ -115,7 +104,7 @@ final class AppStore: ObservableObject {
     }
     func deleteAll() {
         writesBlocked = false
-        guard mutate({ next in next = SavedState(); next.resetAt = Date() }) else { return }
+        guard mutate({ next in next = StoredRecords(); next.resetAt = Date() }) else { return }
         do {
             let directory = fileURL.deletingLastPathComponent()
             for backup in try FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil)

@@ -16,6 +16,7 @@ struct ContentView: View {
         TabView {
             TonightView().tabItem { Label("今夜", systemImage: "moon.stars") }
             HistoryView().tabItem { Label("朝の記録", systemImage: "sun.horizon") }
+            JournalView().tabItem { Label("日中の記録", systemImage: "square.and.pencil") }
             SettingsView().tabItem { Label("このアプリ", systemImage: "slider.horizontal.3") }
         }
         .tint(Palette.mint)
@@ -61,6 +62,7 @@ private struct TonightView: View {
                             }.buttonStyle(.plain).accessibilityAddTraits(settings.mode == mode ? .isSelected : [])
                         }
                     }
+                    AudioLayersView(settings: $settings)
                     VStack(alignment: .leading, spacing: 18) {
                         HStack { Label("スリープタイマー", systemImage: "timer"); Spacer(); Text(settings.timerLabel).foregroundStyle(Palette.mint) }.font(.subheadline)
                         HStack(spacing: 8) {
@@ -70,6 +72,7 @@ private struct TonightView: View {
                                     .background(settings.timerMinutes == (minutes == 0 ? nil : minutes) ? Palette.mint.opacity(0.18) : Palette.background, in: RoundedRectangle(cornerRadius: 10))
                             }
                         }
+                        Text("全体の音量").font(.subheadline)
                         HStack { Image(systemName: "speaker.wave.1"); Slider(value: $settings.volume, in: 0...1).accessibilityLabel("音の音量"); Image(systemName: "speaker.wave.2") }.foregroundStyle(Palette.muted)
                         Text("小さな音から。端末の音量も調整してください。\n終了前の10秒で、静かにフェードアウトします。").font(.caption).foregroundStyle(Palette.muted).lineSpacing(4)
                     }.padding(20).background(Palette.card, in: RoundedRectangle(cornerRadius: 20))
@@ -289,13 +292,16 @@ private struct SettingsView: View {
                     Text("朝のすっきり感を主な手がかりに、音の好みや睡眠をふりかえる個人用の記録アプリです。少しずつ、心地よい夜を見つけていきましょう。")
                 }
                 Section("音について") {
-                    Text("波音は端末内で生成したノイズです。ビートは180 Hzと184 Hzの正弦波を重ねています。特殊な音源やネット接続は不要です。")
+                    Text("波音は端末内で生成したノイズです。ビートは180 Hzの音に、選んだ速さの差をつけた音を重ねています。特殊な音源やネット接続は不要です。")
                     Text("睡眠への効果は確立しておらず、感じ方にも個人差があります。診断や治療を行うものではありません。気になったり不快に感じたら停止してください。")
                 }
                 Section("Apple Watch") {
                     Text("Watchの標準機能で睡眠を記録し、朝にiPhoneのヘルスケアから読み込みます。Watchアプリを開き続ける必要はありません。Watchでは前夜の要約と、朝のすっきり感を記録できます。")
                     if let message = connectivity.message { Text(message).foregroundStyle(.orange) }
                     Button("Watchに最新の要約を送る") { connectivity.sendSummary() }
+                }
+                Section("分析用データ") {
+                    NavigationLink("データを書き出す") { ExportView() }
                 }
                 Section("プライバシー") {
                     Text("音の再生と朝の感覚は、この端末内に保存します。ヘルスケアは読み取り専用です。必要な要約と評価だけをペアリングしたWatchと同期します。アカウント、広告、解析SDK、外部サーバーは使いません。端末のバックアップ設定に応じて、記録がバックアップに含まれる場合があります。")

@@ -8,14 +8,33 @@ public enum SoundMode: String, Codable, CaseIterable, Identifiable, Sendable {
 }
 
 public struct SoundSettings: Codable, Equatable, Sendable {
+    public static let exploratoryRates: [Double] = [1, 2, 3, 4, 6]
     public var mode: SoundMode
     public var volume: Double
     public var timerMinutes: Int?
-    public init(mode: SoundMode = .ambience, volume: Double = 0.2, timerMinutes: Int? = 30) {
+    public var ambienceGain: Double
+    public var beatGain: Double
+    public var beatRateHz: Double
+    public init(mode: SoundMode = .ambience, volume: Double = 0.2, timerMinutes: Int? = 30,
+                ambienceGain: Double = 1, beatGain: Double = 1, beatRateHz: Double = 4) {
         self.mode = mode
         self.volume = volume.isFinite ? min(1, max(0, volume)) : 0
         self.timerMinutes = timerMinutes.map { min(480, max(1, $0)) }
+        self.ambienceGain = ambienceGain.isFinite ? min(1, max(0, ambienceGain)) : 1
+        self.beatGain = beatGain.isFinite ? min(1, max(0, beatGain)) : 1
+        self.beatRateHz = beatRateHz.isFinite ? min(6, max(1, beatRateHz)) : 4
     }
+    private enum CodingKeys: String, CodingKey { case mode, volume, timerMinutes, ambienceGain, beatGain, beatRateHz }
+    public init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        self.init(mode: try values.decode(SoundMode.self, forKey: .mode),
+                  volume: try values.decode(Double.self, forKey: .volume),
+                  timerMinutes: try values.decodeIfPresent(Int.self, forKey: .timerMinutes),
+                  ambienceGain: try values.decodeIfPresent(Double.self, forKey: .ambienceGain) ?? 1,
+                  beatGain: try values.decodeIfPresent(Double.self, forKey: .beatGain) ?? 1,
+                  beatRateHz: try values.decodeIfPresent(Double.self, forKey: .beatRateHz) ?? 4)
+    }
+    public var normalized: Self { Self(mode: mode, volume: volume, timerMinutes: timerMinutes, ambienceGain: ambienceGain, beatGain: beatGain, beatRateHz: beatRateHz) }
     public var timerLabel: String { timerMinutes.map { "\($0)分" } ?? "連続" }
 }
 
@@ -48,9 +67,22 @@ public struct PlaybackSession: Codable, Identifiable, Sendable {
     public var playedSeconds: Double
     public var endReason: PlaybackEnd?
     public var changes: [SettingsChange]
+    public let audioVersion: String
     public init(settings: SoundSettings, startedAt: Date = Date()) {
         id = UUID(); nightID = Night.key(for: startedAt); self.startedAt = startedAt
-        playedSeconds = 0; changes = [SettingsChange(settings: settings, at: startedAt)]
+        playedSeconds = 0; changes = [SettingsChange(settings: settings, at: startedAt)]; audioVersion = AudioSignal.version
+    }
+    private enum CodingKeys: String, CodingKey { case id, nightID, startedAt, endedAt, playedSeconds, endReason, changes, audioVersion }
+    public init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        id = try values.decode(UUID.self, forKey: .id)
+        nightID = try values.decode(String.self, forKey: .nightID)
+        startedAt = try values.decode(Date.self, forKey: .startedAt)
+        endedAt = try values.decodeIfPresent(Date.self, forKey: .endedAt)
+        playedSeconds = try values.decode(Double.self, forKey: .playedSeconds)
+        endReason = try values.decodeIfPresent(PlaybackEnd.self, forKey: .endReason)
+        changes = try values.decode([SettingsChange].self, forKey: .changes)
+        audioVersion = try values.decodeIfPresent(String.self, forKey: .audioVersion) ?? "1"
     }
     public var settings: SoundSettings { changes.last?.settings ?? SoundSettings() }
 }
@@ -122,8 +154,8 @@ public struct HistoryNightSelection: Sendable {
 }
 
 public enum SleepStage: String, Codable, CaseIterable, Sendable {
-    case inBed, awake, unspecified, core, deep, rem
-    public var isAsleep: Bool { self != .inBed && self != .awake }
+    case inBed, awake, unspecified, core, deep, rem, unrecognized
+    public var isAsleep: Bool { [.unspecified, .core, .deep, .rem].contains(self) }
     public var title: String {
         switch self {
         case .inBed: return "就床"
@@ -132,6 +164,7 @@ public enum SleepStage: String, Codable, CaseIterable, Sendable {
         case .core: return "コア"
         case .deep: return "深い睡眠"
         case .rem: return "レム"
+        case .unrecognized: return "未対応の段階"
         }
     }
 }
@@ -144,9 +177,18 @@ public struct SleepSample: Codable, Identifiable, Sendable {
     public let sourceID: String
     public let sourceName: String
     public let isAppleWatch: Bool
-    public init(id: String, start: Date, end: Date, stage: SleepStage, sourceID: String, sourceName: String, isAppleWatch: Bool) {
+    public var sourceBundleIdentifier: String?
+    public var sourceVersion: String?
+    public var productType: String?
+    public var deviceModel: String?
+    public var isUserEntered: Bool?
+    public var categoryValue: Int?
+    public init(id: String, start: Date, end: Date, stage: SleepStage, sourceID: String, sourceName: String, isAppleWatch: Bool,
+                sourceBundleIdentifier: String? = nil, sourceVersion: String? = nil, productType: String? = nil, deviceModel: String? = nil, isUserEntered: Bool? = nil, categoryValue: Int? = nil) {
         self.id = id; self.start = start; self.end = end; self.stage = stage
         self.sourceID = sourceID; self.sourceName = sourceName; self.isAppleWatch = isAppleWatch
+        self.sourceBundleIdentifier = sourceBundleIdentifier; self.sourceVersion = sourceVersion
+        self.productType = productType; self.deviceModel = deviceModel; self.isUserEntered = isUserEntered; self.categoryValue = categoryValue
     }
 }
 
