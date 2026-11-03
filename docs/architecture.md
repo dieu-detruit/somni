@@ -10,3 +10,7 @@ Somnio consists of an iOS 17+ SwiftUI app, a watchOS 10+ companion, and a shared
 - GitHub Actions in this repository runs validation and TestFlight distribution. Signing credentials are repository secrets. No deployment credentials belong in documentation or source files.
 
 The development research priority is morning restfulness rather than maximizing an estimated sleep stage. See the [experiment roadmap](research/experiment-roadmap.md).
+
+## Version 0.2 additions
+
+Independent ambience/beat gains and selectable beat rates retain legacy defaults when reading older settings. Timestamped self-reported journal events are stored separately from HealthKit sleep estimates. User-initiated [analysis export](analysis-export.md) includes the full local history plus a fresh full-day HealthKit query for selected calendar dates. JSON is authoritative; CSV is a convenience view. Serialization/file generation runs off the main actor, and generation-scoped temporary files are removed after sharing/cancellation or on a later launch.

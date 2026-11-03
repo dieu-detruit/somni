@@ -1,14 +1,13 @@
-# 検証記録
+# Verification
 
-2026-11-03、アプリソース 4e93319。
+## Version 0.2.0 (1002.1)
 
-- GitHub Actions macOSで共有ロジック12件のテスト成功。
-- iPhoneアプリと埋め込みWatchアプリの署名なしReleaseアーカイブ成功。
-- アーカイブのBundle ID、Watch companion関係、バージョン一致の検証成功。
-- 検証: https://github.com/dieu-detruit/somni/actions/runs/41479430781
-- 既存SecretsによるSomnioのApp Store Connect確認、HealthKit capability、両Bundle IDの署名ファイル取得成功（前回の配信試行で確認）。
-- TestFlight配信: https://github.com/dieu-detruit/brain-dump/actions/runs/41479439251 （この記録作成時は実行待ち）
+Verified 2026-11-04 (Asia/Tokyo), app source `296a948`.
 
-実機の音の聞こえ方、ロック・通話・音声ルート変更、Watch通信、一晩の電池消費、HealthKitの実データ取得は未検証。
+- 24 shared behavior tests passed on macOS: legacy record/settings migration with nonempty fixtures, audio-layer isolation and limits, journal validation, timestamp precision, CSV escaping, DST range boundaries and sample deduplication.
+- iPhone and embedded Watch Release archives built successfully; bundle IDs, companion relationship and version matching checked.
+- Final scoped review confirmed export serialization/file generation runs off the main actor with generation-specific cancellation and cleanup.
+- [Build verification](https://github.com/dieu-detruit/somni/actions/runs/41664966583).
+- [Signed distribution](https://github.com/dieu-detruit/somni/actions/runs/41664965998): Apple reported VALID, exempt-only encryption accepted, IN_BETA_TESTING. Internal group automatic distribution enabled.
 
-レビューで見つかった朝の日付更新、オフライン評価の保存、削除時のバックアップ除去を修正。再レビューで対象指摘の解消を確認。
+Device validation is still needed for actual loudness, overnight battery/playback, HealthKit data availability and the destination-specific share-sheet/file-copy experience. Automated tests and archive validation do not establish sleep efficacy or device UI behavior.
