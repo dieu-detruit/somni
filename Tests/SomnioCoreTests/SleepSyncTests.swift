@@ -59,6 +59,37 @@ final class SleepSyncTests: XCTestCase {
         records.sleepSync.connection = .enabled
         XCTAssertTrue(try records.commitSleepSync(records.sleepSync, expectedGeneration: records.sleepSync.generation, persist: { _ in }))
     }
+    func testExplicitDeletionPrunesLegacyCacheWithoutDroppingOtherKnownSamples() {
+        let first = sample("deleted")
+        let second = sample("retained", hour: 20, hours: 1)
+        let summary = SleepSummary(samples: [first, second], sourceID: "watch", fetchedAt: date(3, 8))
+        let legacy = NightSleepRecord(id: "2026-11-02", summaries: [summary], selectedSourceID: "watch", fetchedAt: date(3, 8))
+        let pruned = SleepNightIndex.removing(["deleted"], from: [legacy])
+        XCTAssertEqual(pruned.first?.selected?.samples.map(\.id), ["retained"])
+        XCTAssertEqual(pruned.first?.selectedSourceID, "watch")
+    }
+    func testLegacyResetDoesNotAutomaticallyReconnectOnMigration() throws {
+        let old = Data(#"{"settings":{"mode":"ambience","volume":0.2,"timerMinutes":30},"sessions":[],"feedback":[],"sleep":[],"receivedEvents":[],"resetAt":500}"#.utf8)
+        let state = try JSONDecoder().decode(StoredRecords.self, from: old)
+        XCTAssertEqual(state.sleepSync.connection, .pausedAfterDeletion)
+        XCTAssertNil(state.sleepSync.anchor)
+    }
+    func testSyncedExportKeepsRawDaytimeSamplesAndCoverageWithoutExportingAnchor() throws {
+        var records = StoredRecords()
+        records.sleepSync = SleepSyncState(connection: .enabled).applying(additions: [sample("nap", hour: 14, hours: 1)],
+            deletedIDs: [], anchor: Data([9, 8, 7]), syncedAt: date(3, 8))
+        let range = try ExportDateRange(firstDay: date(3, 0), lastDay: date(3, 0), calendar: calendar)
+        let health = HealthExportResult(coverage: HealthCoverage(range: range, status: .noSamplesOrNotAuthorized, sampleCount: 0), samples: [])
+        let bundle = AnalysisBundle(records: records, health: health, appVersion: "test", buildVersion: "1")
+        XCTAssertEqual(bundle.syncedSleepSamples.count, 1)
+        XCTAssertEqual(bundle.syncedSleepCoverage.lastSuccessfulSyncAt, date(3, 8))
+        let text = String(decoding: try AnalysisEncoding.json(bundle), as: UTF8.self)
+        XCTAssertFalse(text.contains("\"anchor\""))
+        XCTAssertTrue(bundle.csvTables().keys.contains("synced_sleep_samples.csv"))
+    }
+    func testEveningToMorningLabelCrossesMonthBoundary() {
+        XCTAssertEqual(Night.label(for: "2026-11-30", calendar: calendar), "2026-11-30 夜 → 12/1 朝")
+    }
     func testEmptyRescanPreservesKnownSamplesRatherThanInferringDeniedReadIsDeletion() {
         let initial = SleepSyncState(connection: .enabled).applying(additions: [sample("known")], deletedIDs: [], anchor: Data([1]), syncedAt: date(3, 8))
         let rescanned = initial.applying(additions: [], deletedIDs: [], anchor: Data([2]), syncedAt: date(3, 9))

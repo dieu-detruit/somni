@@ -21,7 +21,7 @@ private struct WatchHomeView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 17) {
                     HStack { Image(systemName: "sun.horizon"); Text("おはよう。").font(.headline) }.foregroundStyle(mint)
-                    Text(store.summary.nightID + " の夜").font(.caption2).foregroundStyle(.secondary)
+                    Text(Night.label(for: store.summary.nightID)).font(.caption2).foregroundStyle(.secondary)
                     VStack(alignment: .leading, spacing: 5) {
                         Text("睡眠の記録").font(.caption).foregroundStyle(.secondary)
                         if let seconds = store.summary.sleepSeconds { Text(DisplayFormat.duration(seconds)).font(.title3.weight(.medium)).foregroundStyle(mint) }

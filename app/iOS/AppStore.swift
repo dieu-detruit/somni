@@ -9,6 +9,7 @@ final class AppStore: ObservableObject {
     var onChange: (() -> Void)?
     var onSleepReset: (() -> Void)?
     private let fileURL: URL
+    private let disk: RecordDiskStorage
     private var writesBlocked = false
     var settings: SoundSettings { state.settings }
     var sessions: [PlaybackSession] { state.sessions }
@@ -29,7 +30,7 @@ final class AppStore: ObservableObject {
                 if let source = currentSelections[record.id] ?? nil, value.summaries.contains(where: { $0.sourceID == source }) { value.selectedSourceID = source }
                 return value
             }
-            guard try next.commitSleepSync(sync, expectedGeneration: expectedGeneration, nightlyRecords: merged, removedSampleIDs: removedSampleIDs, persist: write) else { return false }
+            guard try next.commitSleepSync(sync, expectedGeneration: expectedGeneration, nightlyRecords: merged, removedSampleIDs: removedSampleIDs, persist: disk.saveSleep) else { return false }
             state = next; onChange?(); return true
         } catch { errorMessage = "睡眠記録を保存できませんでした。次回もう一度同期します。\(error.localizedDescription)"; return false }
     }
@@ -41,6 +42,7 @@ final class AppStore: ObservableObject {
     init() {
         let directory = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0].appendingPathComponent("Somnio", isDirectory: true)
         fileURL = directory.appendingPathComponent("records.json")
+        disk = RecordDiskStorage(directory: directory)
         let exportDirectory = ExportCoordinator.temporaryDirectory
         if FileManager.default.fileExists(atPath: exportDirectory.path) {
             do { try FileManager.default.removeItem(at: exportDirectory) }
@@ -49,7 +51,10 @@ final class AppStore: ObservableObject {
         do {
             try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
             if FileManager.default.fileExists(atPath: fileURL.path) {
-                do { state = try JSONDecoder().decode(StoredRecords.self, from: Data(contentsOf: fileURL)) }
+                do {
+                    let loaded = try disk.load(); state = loaded.records
+                    if let warning = loaded.warning { errorMessage = warning }
+                }
                 catch {
                     // Preserve the unreadable original before allowing any replacement writes.
                     let backup = directory.appendingPathComponent("records-unreadable-\(UUID().uuidString).json")
@@ -64,8 +69,12 @@ final class AppStore: ObservableObject {
             }
         } catch { writesBlocked = true; errorMessage = "記録を読み込めませんでした。\(error.localizedDescription)" }
     }
-    private func write(_ next: StoredRecords) throws {
-        try JSONEncoder().encode(next).write(to: fileURL, options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
+    private func write(_ next: StoredRecords) throws { try disk.saveUser(next) }
+    @discardableResult private func mutateSleep(_ body: (inout StoredRecords) -> Void) -> Bool {
+        guard !writesBlocked else { errorMessage = "保存を停止しています。記録を初期化してから再接続してください。"; return false }
+        var next = state; body(&next)
+        do { try disk.saveSleep(next); state = next; onChange?(); return true }
+        catch { errorMessage = "睡眠記録を保存できませんでした。\(error.localizedDescription)"; return false }
     }
     @discardableResult private func mutate(_ body: (inout StoredRecords) -> Void) -> Bool {
         guard !writesBlocked else { errorMessage = "保存を停止しています。「このアプリ」で記録を削除すると初期化できます。"; return false }
@@ -93,9 +102,9 @@ final class AppStore: ObservableObject {
     func rating(for nightID: String) -> MorningFeedback? { state.feedback.first { $0.nightID == nightID } }
     func sleep(for nightID: String) -> NightSleepRecord? { state.sleep.first { $0.id == nightID } }
     func sessions(for nightID: String) -> [PlaybackSession] { state.sessions.filter { $0.nightID == nightID } }
-    func setSleep(_ record: NightSleepRecord) { mutate { $0.sleep.removeAll { $0.id == record.id }; $0.sleep.append(record) } }
+    func setSleep(_ record: NightSleepRecord) { mutateSleep { $0.sleep.removeAll { $0.id == record.id }; $0.sleep.append(record) } }
     func selectSource(_ sourceID: String, nightID: String) {
-        mutate { next in
+        mutateSleep { next in
             guard let index = next.sleep.firstIndex(where: { $0.id == nightID }) else { return }
             next.sleep[index].selectedSourceID = sourceID
         }
@@ -130,11 +139,12 @@ final class AppStore: ObservableObject {
         guard mutate({ next in next = StoredRecords(); next.resetAt = Date(); next.sleepSync = SleepSyncState(connection: .pausedAfterDeletion) }) else { return }
         onSleepReset?()
         do {
+            try disk.removeSleepFile()
             let exportDirectory = ExportCoordinator.temporaryDirectory
             if FileManager.default.fileExists(atPath: exportDirectory.path) { try FileManager.default.removeItem(at: exportDirectory) }
             let directory = fileURL.deletingLastPathComponent()
             for backup in try FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil)
-                where backup.lastPathComponent.hasPrefix("records-unreadable-") {
+                where backup.lastPathComponent.hasPrefix("records-unreadable-") || backup.lastPathComponent.hasPrefix("sleep-unreadable-") {
                 try FileManager.default.removeItem(at: backup)
             }
         } catch { errorMessage = "記録は初期化しましたが、保全ファイルを削除できませんでした。\(error.localizedDescription)" }

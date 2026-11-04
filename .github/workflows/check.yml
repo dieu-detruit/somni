@@ -18,7 +18,7 @@ concurrency:
   cancel-in-progress: true
 jobs:
   apple-build:
-    runs-on: macos-26
+    runs-on: macos-15
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
@@ -26,6 +26,7 @@ jobs:
           persist-credentials: false
       - name: Prepare XcodeGen
         run: |
+          sudo xcode-select --switch /Applications/Xcode_26.3.app
           xcodebuild -version
           brew install xcodegen
       - name: Tests and unsigned companion archive

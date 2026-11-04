@@ -10,7 +10,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   upload:
-    runs-on: macos-26
+    runs-on: macos-15
     timeout-minutes: 45
     env:
       APPLE_TEAM_ID: ${{ vars.APPLE_TEAM_ID }}

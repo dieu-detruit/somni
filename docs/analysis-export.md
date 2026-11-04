@@ -14,7 +14,8 @@ The date range controls the fresh HealthKit query. Local playback, ratings, jour
 - `morningFeedback` contains self-reported morning outcomes. It is not an objective recovery measurement.
 - `journalEvents` contains manually entered sleepiness, bedtime, nap and morning return-to-sleep events. Event time and creation/edit time differ; retrospective entry is allowed. These do not assert sleep-stage measurements.
 - `healthSleepSamples` contains available HealthKit sleep intervals from the requested full-day range, including daytime periods when present. Sources remain separate. Do not add overlapping intervals from multiple sources as if they were independent sleep time.
-- `cachedSleepRecords` contains the earlier imported summaries and their selected sources/fetch times. These may overlap the fresh query and must not be counted twice.
+- `syncedSleepSamples` contains all locally retained original intervals from automatic synchronization, including daytime samples. `syncedSleepCoverage` describes the synchronization position/status without exposing its private query anchor.
+- `nightlySleepRecords` contains derived overnight summaries and their selected sources. `cachedSleepRecords` retains legacy manually imported caches. These can overlap synchronized samples and the fresh query and must not be counted twice.
 - `healthCoverage` records query scope/status and limitations. Query success means the query completed, not that permission or full physiological coverage was confirmed. Missing samples are not zero sleep.
 - Metadata includes export/schema/app/audio versions and timezone information. Canonical timestamps use ISO 8601; use timezone metadata to reconstruct local dates and handle midnight boundaries.
 
@@ -31,3 +32,5 @@ Avoid reconstructing fine-grained audio settings from only a session's final val
 HealthKit records are available observations, not Apple's proprietary internal classification inputs or an exact reproduction of every official graph. The export can support a sleep-stage timeline from the records it contains. It does not expose live sleep-stage feedback or a physiological controller.
 
 No personal export or example containing real health data belongs in the public repository. Use synthetic fixtures for tests.
+
+Schema version 2 adds automatic-sync samples/coverage and separates current nightly summaries from legacy caches. Version 1 exports predate automatic synchronization; readers should tolerate absent additive fields.

@@ -53,6 +53,7 @@ public enum SleepNightIndex {
     }
     public static func rebuild(samples: [SleepSample], existing: [NightSleepRecord], affectedNights: Set<String>? = nil,
                                fetchedAt: Date, calendar: Calendar = .current) -> [NightSleepRecord] {
+        if affectedNights?.isEmpty == true { return existing }
         var buckets: [String: [SleepSample]] = [:]
         for sample in samples {
             for key in nightKeys(for: sample, calendar: calendar) where affectedNights?.contains(key) ?? true { buckets[key, default: []].append(sample) }

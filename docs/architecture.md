@@ -14,3 +14,7 @@ The development research priority is morning restfulness rather than maximizing 
 ## Version 0.2 additions
 
 Independent ambience/beat gains and selectable beat rates retain legacy defaults when reading older settings. Timestamped self-reported journal events are stored separately from HealthKit sleep estimates. User-initiated [analysis export](analysis-export.md) includes the full local history plus a fresh full-day HealthKit query for selected calendar dates. JSON is authoritative; CSV is a convenience view. Serialization/file generation runs off the main actor, and generation-scoped temporary files are removed after sharing/cancellation or on a later launch.
+
+## Automatic sleep synchronization
+
+A lifecycle-owned HealthKit reader performs initial all-readable-history import and anchored incremental catch-up on foreground and updates observed while running. Raw samples, deletions and the query anchor commit together; local save failure preserves the prior anchor. See [synchronization](sleep-synchronization.md) for permission, reset and foreground limits. Export schema 2 distinguishes synced raw intervals, current nightly summaries, and retained legacy caches.
