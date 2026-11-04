@@ -39,7 +39,7 @@ public final class RecordDiskStorage {
             }
             do {
                 let bulk = try decoder.decode(SleepFile.self, from: Data(contentsOf: sleepURL))
-                guard bulk.generation == records.sleepSync.generation else {
+                guard bulk.generation == records.sleepSync.generation, bulk.sync.generation == bulk.generation else {
                     return Loaded(records: records, warning: records.sleepSync.connection == .enabled ? "以前の睡眠ファイルは初期化前のため使用しません。全履歴を再確認します。" : nil)
                 }
                 let connection = records.sleepSync.connection

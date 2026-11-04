@@ -55,6 +55,11 @@ final class RecordDiskStorageTests: XCTestCase {
         XCTAssertTrue(reopened.sleepSync.samples.isEmpty)
         XCTAssertNil(reopened.sleepSync.anchor)
         XCTAssertTrue(reopened.sleep.isEmpty)
+        reset.sleepSync.connection = .enabled
+        try disk.saveUser(reset)
+        let reconnected = try RecordDiskStorage(directory: directory).load().records
+        XCTAssertTrue(reconnected.sleepSync.samples.isEmpty)
+        XCTAssertNil(reconnected.sleepSync.anchor)
     }
     func testCorruptBulkPreservesUserRecordsAndRequiresAnchorRebuild() throws {
         let directory = try directory(); let disk = RecordDiskStorage(directory: directory)
@@ -65,16 +70,48 @@ final class RecordDiskStorageTests: XCTestCase {
         XCTAssertNil(loaded.records.sleepSync.anchor)
         XCTAssertNotNil(loaded.warning)
     }
-    func testFailedBulkWriteLeavesPreviousAnchorOnDisk() throws {
+    func testFailedBulkWriteDoesNotCommitCandidateAnchor() throws {
         let directory = try directory(); let disk = RecordDiskStorage(directory: directory)
-        let old = records(); try disk.saveSleep(old); try disk.saveUser(old)
-        let before = try Data(contentsOf: disk.sleepURL)
-        var updated = old; updated.sleepSync.anchor = Data([9])
-        let blocked = directory.appendingPathComponent("blocked", isDirectory: true)
-        try Data("file".utf8).write(to: blocked)
-        let invalidDisk = RecordDiskStorage(directory: blocked)
-        XCTAssertThrowsError(try invalidDisk.saveSleep(updated))
-        XCTAssertEqual(try Data(contentsOf: disk.sleepURL), before)
-        XCTAssertEqual(try disk.load().records.sleepSync.anchor, old.sleepSync.anchor)
+        var current = records(); try disk.saveSleep(current); try disk.saveUser(current)
+        let oldAnchor = current.sleepSync.anchor
+        let backup = directory.appendingPathComponent("previous-sleep.json")
+        try FileManager.default.moveItem(at: disk.sleepURL, to: backup)
+        let before = try Data(contentsOf: backup)
+        try FileManager.default.createDirectory(at: disk.sleepURL, withIntermediateDirectories: true)
+        try Data("blocker".utf8).write(to: disk.sleepURL.appendingPathComponent("child"))
+        var candidate = current.sleepSync; candidate.anchor = Data([9])
+        XCTAssertThrowsError(try current.commitSleepSync(candidate, expectedGeneration: current.sleepSync.generation, persist: disk.saveSleep))
+        XCTAssertEqual(current.sleepSync.anchor, oldAnchor)
+        XCTAssertEqual(try Data(contentsOf: backup), before)
+        try FileManager.default.removeItem(at: disk.sleepURL)
+        try FileManager.default.moveItem(at: backup, to: disk.sleepURL)
+        XCTAssertEqual(try disk.load().records.sleepSync.anchor, oldAnchor)
+    }
+    func testMigrationWriteFailureLeavesFullLegacySourceRecoverable() throws {
+        let directory = try directory(); let disk = RecordDiskStorage(directory: directory)
+        let legacy = records(); let original = try JSONEncoder().encode(legacy)
+        try original.write(to: disk.userURL)
+        try FileManager.default.createDirectory(at: disk.sleepURL, withIntermediateDirectories: true)
+        try Data("blocker".utf8).write(to: disk.sleepURL.appendingPathComponent("child"))
+        let loaded = try disk.load()
+        XCTAssertEqual(loaded.records.feedback, legacy.feedback)
+        XCTAssertEqual(loaded.records.sleepSync.anchor, legacy.sleepSync.anchor)
+        XCTAssertNotNil(loaded.warning)
+        XCTAssertEqual(try Data(contentsOf: disk.userURL), original)
+        try FileManager.default.removeItem(at: disk.sleepURL)
+        let retried = try RecordDiskStorage(directory: directory).load().records
+        XCTAssertEqual(retried.sleepSync.samples.count, 1)
+        XCTAssertEqual(retried.feedback, legacy.feedback)
+    }
+    func testMissingBulkLeavesLocalJournalAndRatingsReadable() throws {
+        let directory = try directory(); let disk = RecordDiskStorage(directory: directory)
+        var state = records()
+        state.journal = [try JournalEvent(kind: .sleepiness, severity: 3, note: "synthetic")]
+        try disk.saveSleep(state); try disk.saveUser(state); try disk.removeSleepFile()
+        let loaded = try disk.load()
+        XCTAssertEqual(loaded.records.feedback, state.feedback)
+        XCTAssertEqual(loaded.records.journal, state.journal)
+        XCTAssertNil(loaded.records.sleepSync.anchor)
+        XCTAssertNotNil(loaded.warning)
     }
 }
