@@ -1,5 +1,15 @@
 # Verification
 
+## Version 0.2.1 (1003.1)
+
+Verified 2026-11-05 (Asia/Tokyo), source `4a86afe`.
+
+- 43 shared tests passed, including incremental sleep merge/deletion, all-night indexing, source selection, migration, reset/in-flight generation checks and seven split-file persistence failure/recovery tests.
+- iPhone and embedded Watch signed archives passed bundle/companion/version checks.
+- [Distribution run](https://github.com/dieu-detruit/somni/actions/runs/41873722664): VALID, IN_BETA_TESTING; Internal automatic distribution enabled.
+- Review resolved full-history writes on ordinary edits by separating bulk sleep persistence from lightweight user records.
+- Actual HealthKit delivery/foreground behavior still requires confirmation on paired devices; no terminated-app background-delivery guarantee is made.
+
 ## Version 0.2.0 (1002.1)
 
 Verified 2026-11-04 (Asia/Tokyo), app source `296a948`.

@@ -12,7 +12,7 @@ Apple's privacy model does not let the app determine whether sleep-reading acces
 
 ## Reliability
 
-The query anchor and raw records are saved together. A failed local save must not advance the anchor. Additions replace matching sample IDs, deletions remove them, and affected night summaries are rebuilt while retaining valid source selections. Samples from different sources are not silently summed together. Existing playback, ratings, journal entries and historical caches remain backward compatible.
+The query anchor and raw records are saved together in a bulk sleep file. Ordinary settings, ratings and journal edits save only a lightweight user-record file. Migration writes recoverable bulk data before replacing the legacy combined file; an authoritative generation marker prevents stale bulk data from returning after a reset. A failed local save must not advance the anchor. Additions replace matching sample IDs, deletions remove them, and affected night summaries are rebuilt while retaining valid source selections. Samples from different sources are not silently summed together. Existing playback, ratings, journal entries and historical caches remain backward compatible.
 
 Deleting all Somnio data clears imported records and the synchronization position, and pauses automatic import until the user explicitly reconnects. Apple Health originals are unchanged.
 
