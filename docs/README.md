@@ -1,5 +1,6 @@
 # Documentation
 
+- [Sleep synchronization](sleep-synchronization.md): automatic history catch-up, permission behavior and recovery.
 - [Analysis export](analysis-export.md): export scope, timestamps, provenance and sharing for analysis.
 - [Evidence review](research/evidence-review.md): study designs, positive/null/adverse findings, access limitations, and implications.
 - [Experiment roadmap](research/experiment-roadmap.md): prioritized hypotheses and a proposed personal comparison protocol.

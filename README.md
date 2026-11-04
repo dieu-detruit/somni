@@ -8,7 +8,7 @@ Sleep sounds for iPhone and a morning journal for Apple Watch. Somnio helps you 
 - Adjust ambience and beat levels independently, explore beat rates, and set a sleep timer with a gentle fade-out.
 - Record morning restfulness, ease of falling asleep, and notes.
 - Record sleepiness, bedtime, naps, and morning return-to-sleep intervals.
-- Review playback history alongside sleep records from Apple Health.
+- Automatically catch up on readable Apple Health sleep history when the app opens, and review it alongside playback history.
 - Export timestamped JSON and CSV files for personal analysis through the iOS share sheet.
 - Record restfulness on Apple Watch and sync it to iPhone.
 - Keep records on your devices, without an account or analytics service.
@@ -21,7 +21,7 @@ Audio research has mixed results. Somnio supports personal experimentation and r
 - watchOS 10 or later for the companion app
 - Xcode 26.3 and XcodeGen for development
 
-Enable Apple's sleep tracking on Apple Watch to include sleep records. Grant Somnio read access to sleep data when prompted in the app.
+Enable Apple's sleep tracking on Apple Watch to include sleep records. Connect sleep data in Somnio and grant read access when prompted. Subsequent app openings catch up automatically; selecting a night only changes the displayed summary. See [sleep synchronization](docs/sleep-synchronization.md) for recovery and permission details.
 
 ## Development
 

@@ -7,6 +7,7 @@ final class AppStore: ObservableObject {
     @Published private var state = StoredRecords()
     @Published var errorMessage: String?
     var onChange: (() -> Void)?
+    var onSleepReset: (() -> Void)?
     private let fileURL: URL
     private var writesBlocked = false
     var settings: SoundSettings { state.settings }
@@ -15,6 +16,23 @@ final class AppStore: ObservableObject {
     var resetAt: Date? { state.resetAt }
     var journal: [JournalEvent] { state.journal }
     var exportSnapshot: StoredRecords { state }
+    var sleepSync: SleepSyncState { state.sleepSync }
+    var importedNights: [String] { state.sleep.map(\.id) }
+    @discardableResult func connectSleep() -> Bool { mutate { $0.sleepSync.connection = .enabled } }
+    @discardableResult func commitSleepSync(_ sync: SleepSyncState, expectedGeneration: UUID, nightlyRecords: [NightSleepRecord], removedSampleIDs: Set<String>) -> Bool {
+        guard !writesBlocked else { errorMessage = "保存を停止しています。記録を初期化してから再接続してください。"; return false }
+        do {
+            var next = state
+            let currentSelections = Dictionary(state.sleep.map { ($0.id, $0.selectedSourceID) }, uniquingKeysWith: { _, newest in newest })
+            let merged = nightlyRecords.map { record -> NightSleepRecord in
+                var value = record
+                if let source = currentSelections[record.id] ?? nil, value.summaries.contains(where: { $0.sourceID == source }) { value.selectedSourceID = source }
+                return value
+            }
+            guard try next.commitSleepSync(sync, expectedGeneration: expectedGeneration, nightlyRecords: merged, removedSampleIDs: removedSampleIDs, persist: write) else { return false }
+            state = next; onChange?(); return true
+        } catch { errorMessage = "睡眠記録を保存できませんでした。次回もう一度同期します。\(error.localizedDescription)"; return false }
+    }
     @discardableResult func saveJournal(_ event: JournalEvent) -> Bool {
         mutate { next in next.journal.removeAll { $0.id == event.id }; next.journal.append(event) }
     }
@@ -109,7 +127,8 @@ final class AppStore: ObservableObject {
     }
     func deleteAll() {
         writesBlocked = false
-        guard mutate({ next in next = StoredRecords(); next.resetAt = Date() }) else { return }
+        guard mutate({ next in next = StoredRecords(); next.resetAt = Date(); next.sleepSync = SleepSyncState(connection: .pausedAfterDeletion) }) else { return }
+        onSleepReset?()
         do {
             let exportDirectory = ExportCoordinator.temporaryDirectory
             if FileManager.default.fileExists(atPath: exportDirectory.path) { try FileManager.default.removeItem(at: exportDirectory) }

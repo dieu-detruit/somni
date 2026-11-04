@@ -50,6 +50,8 @@ final class JournalExportTests: XCTestCase {
         let state = try JSONDecoder().decode(StoredRecords.self, from: old)
         XCTAssertTrue(state.journal.isEmpty)
         XCTAssertEqual(state.schemaVersion, 2)
+        XCTAssertEqual(state.sleepSync.connection, .enabled)
+        XCTAssertEqual(state.legacySleepCaches.count, 1)
         XCTAssertEqual(state.settings.volume, 0.3)
         XCTAssertEqual(state.sessions.first?.audioVersion, "1")
         XCTAssertEqual(state.sessions.first?.changes.first?.settings.beatRateHz, 4)

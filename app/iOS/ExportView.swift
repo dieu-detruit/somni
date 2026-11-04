@@ -23,7 +23,7 @@ struct ExportView: View {
     }
     private var descriptionSection: some View {
         Section("含まれるデータを確認") {
-            Text("アプリ内の全期間の再生履歴（途中の設定変更を含む）、朝の評価、日中の記録、メモ、保存済みの睡眠記録を含みます。")
+            Text("アプリ内の全期間の再生履歴（途中の設定変更を含む）、朝の評価、日中の記録、メモ、自動同期した全期間の睡眠区間、以前取り込んだ睡眠記録を含みます。")
             Text("加えて、下で選んだ日付範囲のヘルスケア睡眠データを読み込みます。日中の昼寝や朝の睡眠も対象です。範囲はヘルスケアの読み込みにだけ適用し、アプリ内の記録は全期間を書き出します。")
             Text("JSONが正式なデータです。確認用のCSVも同時に共有できます。共有先に健康情報とメモが渡るため、内容と送信先を確認してください。自動アップロードは行いません。")
             Text("音量はアプリ内の設定値です。端末の実際の音量や耳元の音の大きさは記録していません。")
@@ -73,7 +73,7 @@ private struct CoveragePreview: View {
         VStack(alignment: .leading, spacing: 8) {
             Text("準備できました · \(fileCount)ファイル").font(.headline)
             Text(status)
-            Text("アプリ内記録は全期間。取得できなかった範囲やエラーもJSONとCSVに含まれます。区間がない場合は、未同期や読み取り不許可などを区別できません。")
+            Text("アプリ内記録は全期間。自動同期の最終時刻と区間数、今回取得できなかった範囲やエラーもJSONとCSVに含まれます。区間がない場合は、未同期や読み取り不許可などを区別できません。")
                 .font(.caption).foregroundStyle(.secondary)
             if let error = coverage.errorDescription { Text(error).font(.caption).foregroundStyle(.orange) }
         }

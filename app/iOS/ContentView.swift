@@ -100,13 +100,13 @@ private struct TonightView: View {
 private struct HistoryView: View {
     @EnvironmentObject private var store: AppStore
     @Environment(\.scenePhase) private var scenePhase
-    @StateObject private var health = HealthSleepReader()
+    @EnvironmentObject private var health: HealthSleepReader
     @State private var nightSelection = HistoryNightSelection()
     @State private var showRating = false
     @State private var ratingNight: String?
     private var selectedNight: String { nightSelection.selectedNight }
     private var nights: [String] {
-        var values = Set(store.sessions.map(\.nightID) + store.feedback.map(\.nightID))
+        var values = Set(store.sessions.map(\.nightID) + store.feedback.map(\.nightID) + store.importedNights)
         values.insert(selectedNight)
         for day in 0..<7 { if let date = Calendar.current.date(byAdding: .day, value: -day, to: Date()) { values.insert(Night.previous(for: date)) } }
         return values.sorted(by: >)
@@ -119,7 +119,7 @@ private struct HistoryView: View {
                 VStack(alignment: .leading, spacing: 22) {
                     Text("目覚めを、ふりかえる。").font(.system(size: 28, weight: .medium, design: .serif))
                     Text("いちばん大切なのは、朝のあなたの感覚。").font(.subheadline).foregroundStyle(Palette.muted)
-                    Picker("夜を選ぶ", selection: Binding(get: { selectedNight }, set: { nightSelection.select($0) })) { ForEach(nights, id: \.self) { Text($0 + " の夜").tag($0) } }.tint(Palette.mint)
+                    Picker("夜を選ぶ", selection: Binding(get: { selectedNight }, set: { nightSelection.select($0) })) { ForEach(nights, id: \.self) { Text(Night.label(for: $0)).tag($0) } }.tint(Palette.mint)
                     VStack(alignment: .leading, spacing: 14) {
                         HStack {
                             Label("朝のすっきり感", systemImage: "sun.max")
@@ -151,8 +151,7 @@ private struct HistoryView: View {
                             Text("Apple Watchの標準の睡眠記録を表示します。\n同期に時間がかかる場合があります。").font(.subheadline).foregroundStyle(Palette.muted).lineSpacing(4)
                         }
                         if let fetchedAt = sleep?.fetchedAt { Text("取得: " + fetchedAt.formatted(date: .abbreviated, time: .shortened)).font(.caption).foregroundStyle(Palette.muted) }
-                        if let message = health.message { Text(message).font(.caption).foregroundStyle(Palette.muted) }
-                        Button(sleep == nil ? "ヘルスケアから読み込む" : "睡眠記録を再取得") { Task { await health.refresh(nightID: selectedNight, store: store) } }.disabled(health.loading)
+                        SleepSyncStatusView()
                         Text("夜18時〜翌12時の区間。昼の記録と分けて表示します。").font(.caption2).foregroundStyle(Palette.muted)
                     }.cardStyle()
                     VStack(alignment: .leading, spacing: 14) {
@@ -166,7 +165,6 @@ private struct HistoryView: View {
                 }.padding(24)
             }.background(Palette.background).navigationTitle("朝の記録").navigationBarTitleDisplayMode(.inline)
             .sheet(isPresented: $showRating) { RatingEditor(nightID: ratingNight ?? selectedNight) }
-            .onChange(of: selectedNight) { _, _ in health.message = nil }
             .onAppear { nightSelection.refresh() }
             .onChange(of: scenePhase) { _, phase in if phase == .active { nightSelection.refresh() } }
             .onReceive(NotificationCenter.default.publisher(for: .NSCalendarDayChanged)) { _ in nightSelection.refresh() }
@@ -261,7 +259,7 @@ private struct RatingEditor: View {
                     Text("1 寝つきにくかった　〜　5 すっと眠れた").font(.caption).foregroundStyle(.secondary)
                 } header: { Text("寝つき") }
                 Section("ひとことメモ") { TextField("体調、気になった音、昨日のこと…", text: $note, axis: .vertical).lineLimit(4...8).onChange(of: note) { _, value in if value.count > 2000 { note = String(value.prefix(2000)) } } }
-                Section { Text(nightID + " の夜の記録").font(.caption) }
+                Section { Text(Night.label(for: nightID)).font(.caption) }
             }.navigationTitle("朝の感覚").navigationBarTitleDisplayMode(.inline)
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) { Button("キャンセル") { dismiss() } }
@@ -296,7 +294,7 @@ private struct SettingsView: View {
                     Text("睡眠への効果は確立しておらず、感じ方にも個人差があります。診断や治療を行うものではありません。気になったり不快に感じたら停止してください。")
                 }
                 Section("Apple Watch") {
-                    Text("Watchの標準機能で睡眠を記録し、朝にiPhoneのヘルスケアから読み込みます。Watchアプリを開き続ける必要はありません。Watchでは前夜の要約と、朝のすっきり感を記録できます。")
+                    Text("Watchの標準機能で睡眠を記録し、iPhoneを開いたときにヘルスケアの未同期データを自動で読み込みます。Watchアプリを開き続ける必要はありません。Watchでは前夜の要約と、朝のすっきり感を記録できます。")
                     if let message = connectivity.message { Text(message).foregroundStyle(.orange) }
                     Button("Watchに最新の要約を送る") { connectivity.sendSummary() }
                 }

@@ -19,9 +19,11 @@ public struct StoredRecords: Codable, Sendable {
     public var sleep: [NightSleepRecord] = []
     public var journal: [JournalEvent] = []
     public var receivedEvents: [UUID] = []
+    public var sleepSync = SleepSyncState()
+    public var legacySleepCaches: [NightSleepRecord] = []
     public var resetAt: Date?
     public init() {}
-    private enum CodingKeys: String, CodingKey { case schemaVersion, settings, sessions, feedback, sleep, journal, receivedEvents, resetAt }
+    private enum CodingKeys: String, CodingKey { case schemaVersion, settings, sessions, feedback, sleep, journal, receivedEvents, resetAt, sleepSync, legacySleepCaches }
     public init(from decoder: Decoder) throws {
         let values = try decoder.container(keyedBy: CodingKeys.self)
         settings = try values.decode(SoundSettings.self, forKey: .settings)
@@ -31,5 +33,13 @@ public struct StoredRecords: Codable, Sendable {
         journal = try values.decodeIfPresent([JournalEvent].self, forKey: .journal) ?? []
         receivedEvents = try values.decodeIfPresent([UUID].self, forKey: .receivedEvents) ?? []
         resetAt = try values.decodeIfPresent(Date.self, forKey: .resetAt)
+        if let sync = try values.decodeIfPresent(SleepSyncState.self, forKey: .sleepSync) {
+            sleepSync = sync
+            legacySleepCaches = try values.decodeIfPresent([NightSleepRecord].self, forKey: .legacySleepCaches) ?? []
+        } else {
+            let connection: SleepConnection = !sleep.isEmpty ? .enabled : (resetAt == nil ? .notConnected : .pausedAfterDeletion)
+            sleepSync = SleepSyncState(connection: connection)
+            legacySleepCaches = sleep
+        }
     }
 }

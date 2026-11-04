@@ -126,6 +126,11 @@ public enum Night {
               let start = calendar.date(byAdding: .hour, value: 6, to: whole.start) else { return nil }
         return DateInterval(start: start, end: whole.end)
     }
+    public static func label(for key: String, calendar: Calendar = .current) -> String {
+        guard let window = window(for: key, calendar: calendar) else { return key }
+        let morning = calendar.dateComponents([.month, .day], from: window.end)
+        return "\(key) 夜 → \(morning.month ?? 1)/\(morning.day ?? 1) 朝"
+    }
     public static func previous(for date: Date = Date(), calendar: Calendar = .current) -> String {
         // Before noon the current night already denotes last evening; after noon go back one day.
         if calendar.component(.hour, from: date) < 12 { return key(for: date, calendar: calendar) }

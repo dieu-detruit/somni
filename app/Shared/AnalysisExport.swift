@@ -37,7 +37,7 @@ public struct HealthExportResult: Sendable {
 }
 
 public struct AnalysisMetadata: Codable, Sendable {
-    public let schemaVersion = 1
+    public let schemaVersion = 2
     public let appVersion: String
     public let buildVersion: String
     public let audioVersion = AudioSignal.version
@@ -63,10 +63,15 @@ public struct AnalysisBundle: Codable, Sendable {
     public let journalEvents: [JournalEvent]
     public let cachedSleepRecords: [NightSleepRecord]
     public let healthSleepSamples: [SleepSample]
+    public let syncedSleepSamples: [SleepSample]
+    public let syncedSleepCoverage: SyncedSleepCoverage
+    public let nightlySleepRecords: [NightSleepRecord]
     public init(records: StoredRecords, health: HealthExportResult, appVersion: String, buildVersion: String) {
         metadata = AnalysisMetadata(appVersion: appVersion, buildVersion: buildVersion)
         healthCoverage = health.coverage; playbackSessions = records.sessions; morningFeedback = records.feedback
-        journalEvents = records.journal; cachedSleepRecords = records.sleep
+        journalEvents = records.journal; cachedSleepRecords = records.legacySleepCaches
+        syncedSleepSamples = records.sleepSync.samples; syncedSleepCoverage = SyncedSleepCoverage(records.sleepSync)
+        nightlySleepRecords = records.sleep
         healthSleepSamples = SampleDeduplication.unique(health.samples)
     }
 }

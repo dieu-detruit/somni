@@ -5,7 +5,9 @@ public extension AnalysisBundle {
         ["metadata.csv": metadataTable(), "playback_sessions.csv": sessionTable(), "setting_changes.csv": settingTable(),
          "morning_feedback.csv": feedbackTable(), "journal_events.csv": journalTable(),
          "health_sleep_samples.csv": CSV.table(Self.sampleHeader, healthSleepSamples.map(Self.sampleValues)),
-         "cached_sleep_records.csv": cachedRecordTable(), "cached_sleep_samples.csv": cachedSampleTable()]
+         "cached_sleep_records.csv": cachedRecordTable(), "cached_sleep_samples.csv": cachedSampleTable(),
+         "synced_sleep_samples.csv": CSV.table(Self.sampleHeader, syncedSleepSamples.map(Self.sampleValues)),
+         "synced_sleep_coverage.csv": syncCoverageTable(), "nightly_sleep_records.csv": nightlyTable()]
     }
     private static func date(_ value: Date?) -> String { value.map(AnalysisEncoding.timestamp) ?? "" }
     private static func number<T: CustomStringConvertible>(_ value: T?) -> String { value?.description ?? "" }
@@ -13,6 +15,16 @@ public extension AnalysisBundle {
     private static func sampleValues(_ sample: SleepSample) -> [String] {
         [sample.id, date(sample.start), date(sample.end), sample.stage.rawValue, sample.sourceID, sample.sourceName,
          String(sample.isAppleWatch), sample.sourceBundleIdentifier ?? "", sample.sourceVersion ?? "", sample.productType ?? "", sample.deviceModel ?? "", number(sample.isUserEntered), number(sample.categoryValue)]
+    }
+    private func syncCoverageTable() -> String {
+        let value = syncedSleepCoverage
+        return CSV.table(["connection", "lastSuccessfulSyncAt", "retainedSampleCount", "lastBatchAddedCount", "lastBatchDeletedCount", "scope", "missingness"],
+            [[value.connection.rawValue, Self.date(value.lastSuccessfulSyncAt), String(value.retainedSampleCount), String(value.lastBatchAddedCount),
+              String(value.lastBatchDeletedCount), value.scope, value.missingness]])
+    }
+    private func nightlyTable() -> String {
+        let rows = nightlySleepRecords.map { [$0.id, $0.selectedSourceID ?? "", Self.date($0.fetchedAt), String($0.summaries.count)] }
+        return CSV.table(["nightID", "selectedSourceID", "fetchedAt", "sourceCount"], rows)
     }
     private func metadataTable() -> String {
         let rows = [
