@@ -15,10 +15,10 @@ private final class RenderState: @unchecked Sendable {
         lock.lock(); defer { lock.unlock() }
         let list = UnsafeMutableAudioBufferListPointer(buffers)
         for frame in 0..<Int(frames) {
-            let value = signal.next()
-            for buffer in list {
+            let sample = signal.nextStereo()
+            for (channel, buffer) in list.enumerated() {
                 guard let data = buffer.mData else { continue }
-                data.assumingMemoryBound(to: Float.self)[frame] = value
+                data.assumingMemoryBound(to: Float.self)[frame] = channel == 0 ? sample.left : sample.right
             }
         }
         if signal.isFinished && !announcedEnd { announcedEnd = true; return true }
@@ -71,6 +71,15 @@ final class AudioPlayer: ObservableObject {
     func start(settings: SoundSettings) {
         guard !active else { return }
         errorMessage = nil; lastEnd = nil; elapsed = 0; stoppingReason = nil
+        if settings.binauralIntro {
+            let outputs = AVAudioSession.sharedInstance().currentRoute.outputs
+            let external = outputs.contains { [.headphones, .bluetoothA2DP, .bluetoothLE, .usbAudio].contains($0.portType) }
+            guard external else {
+                errorMessage = "14 Hzの導入には両耳イヤホンが必要です。接続するか、導入をオフにしてください。"
+                state = .failed
+                return
+            }
+        }
         guard let id = store?.begin(settings: settings) else {
             errorMessage = "再生の記録を保存できませんでした。保存エラーを確認してください。"; state = .failed; return
         }
@@ -80,7 +89,7 @@ final class AudioPlayer: ObservableObject {
             try audioSession.setCategory(.playback, mode: .default, options: [])
             try audioSession.setActive(true)
             let rate = audioSession.sampleRate
-            guard let format = AVAudioFormat(standardFormatWithSampleRate: rate, channels: 1) else { throw PlayerError.invalidFormat }
+            guard let format = AVAudioFormat(standardFormatWithSampleRate: rate, channels: 2) else { throw PlayerError.invalidFormat }
             let render = RenderState(settings: settings, sampleRate: rate)
             renderState = render
             let node = AVAudioSourceNode(format: format) { [weak self, render] _, _, frameCount, buffers in

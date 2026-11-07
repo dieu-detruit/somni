@@ -62,6 +62,16 @@ private struct TonightView: View {
                             }.buttonStyle(.plain).accessibilityAddTraits(settings.mode == mode ? .isSelected : [])
                         }
                     }
+                    VStack(alignment: .leading, spacing: 10) {
+                        Toggle("最初の12分に14 Hzを試す", isOn: $settings.binauralIntro)
+                            .disabled(player.active)
+                        Text("両耳イヤホン用。12分のバイノーラル音のあと、30秒かけて下で選んだ音に戻ります。タイマーは導入を含む合計時間です。脳の疲労回復を探る実験です。")
+                            .font(.caption).foregroundStyle(Palette.muted)
+                        if settings.binauralIntro {
+                            Text("Bluetooth・USBの出力先も、両耳イヤホンであることを確認してください。端末のモノラルオーディオはオフにします。")
+                                .font(.caption).foregroundStyle(Palette.muted)
+                        }
+                    }.padding(20).background(Palette.card, in: RoundedRectangle(cornerRadius: 20))
                     AudioLayersView(settings: $settings)
                     VStack(alignment: .leading, spacing: 18) {
                         HStack { Label("スリープタイマー", systemImage: "timer"); Spacer(); Text(settings.timerLabel).foregroundStyle(Palette.mint) }.font(.subheadline)
@@ -85,6 +95,10 @@ private struct TonightView: View {
                         }.font(.headline).frame(maxWidth: .infinity).padding(.vertical, 20).foregroundStyle(Palette.background).background(Palette.mint, in: Capsule())
                     }.disabled(player.state == .stopping)
                     if player.active {
+                        if settings.binauralIntro {
+                            Text(player.elapsed < AudioSignal.introDuration ? "14 Hzの導入中 · このあと選択した音に戻ります" : player.elapsed < AudioSignal.introDuration + AudioSignal.introTransitionDuration ? "選択した音へ切り替え中" : "導入終了 · 選択した音を再生中")
+                                .font(.caption).foregroundStyle(Palette.mint)
+                        }
                         HStack { Image(systemName: "waveform"); Text("再生中 · " + DisplayFormat.duration(player.elapsed)); Spacer(); Text("ロックしても再生") }.font(.caption).foregroundStyle(Palette.muted)
                     } else if let end = player.lastEnd { Text(end.title).font(.caption).foregroundStyle(Palette.muted) }
                     if let error = player.errorMessage { Text(error).font(.footnote).foregroundStyle(.orange) }

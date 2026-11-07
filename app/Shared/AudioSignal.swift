@@ -1,8 +1,15 @@
 import Foundation
 
+public struct StereoSample {
+    public let left: Float
+    public let right: Float
+}
+
 /// State belongs to one audio render thread. All time, including fades, follows rendered samples.
 public struct AudioSignal {
-    public static let version = "2"
+    public static let version = "3"
+    public static let introDuration: Double = 720
+    public static let introTransitionDuration: Double = 30
     public static let peakLimit: Float = 0.22
     public private(set) var settings: SoundSettings
     private let sampleRate: Double
@@ -13,6 +20,8 @@ public struct AudioSignal {
     private var manualStartFrame: Int64?
     private var phase1: Double = 0
     private var phase2: Double = 0
+    private var introLeftPhase: Double = 0
+    private var introRightPhase: Double = 0
     private var wavePhase: Double = 0
     private var gain: Double = 0
     private var beatMix: Double = 0
@@ -37,7 +46,9 @@ public struct AudioSignal {
         self.sampleRate = sampleRate.isFinite && sampleRate >= 1 ? sampleRate : 44_100
     }
     public mutating func update(settings: SoundSettings) {
+        let introduction = self.settings.binauralIntro
         self.settings = settings.normalized
+        self.settings.binauralIntro = introduction
     }
     public mutating func beginFadeOut(seconds: Double = 2) {
         guard manualEndFrame == nil else { return }
@@ -45,7 +56,10 @@ public struct AudioSignal {
         manualEndFrame = frame + Int64(max(0, seconds.isFinite ? seconds : 0) * sampleRate)
     }
     public mutating func next() -> Float {
-        guard !isFinished else { return 0 }
+        nextStereo().left
+    }
+    public mutating func nextStereo() -> StereoSample {
+        guard !isFinished else { return StereoSample(left: 0, right: 0) }
         random ^= random << 13; random ^= random >> 7; random ^= random << 17
         let white = Double(random & 0xFFFF) / 32767.5 - 1
         lowNoise = lowNoise * 0.985 + white * 0.015
@@ -65,8 +79,16 @@ public struct AudioSignal {
         if let end = manualEndFrame, let start = manualStartFrame {
             envelope *= min(1, max(0, Double(end - frame) / Double(max(1, end - start))))
         }
+        let introWeight = settings.binauralIntro ? min(1, max(0, (Self.introDuration + Self.introTransitionDuration - elapsedSeconds) / Self.introTransitionDuration)) : 0
+        let baseline = noise * ambienceGain + beat * beatGain
+        let left = (baseline * (1 - introWeight) + sin(introLeftPhase) * 0.13 * introWeight) * gain * envelope * 0.5
+        let right = (baseline * (1 - introWeight) + sin(introRightPhase) * 0.13 * introWeight) * gain * envelope * 0.5
+        introLeftPhase = (introLeftPhase + 2 * .pi * 165 / sampleRate).truncatingRemainder(dividingBy: 2 * .pi)
+        introRightPhase = (introRightPhase + 2 * .pi * 179 / sampleRate).truncatingRemainder(dividingBy: 2 * .pi)
         frame += 1
-        let sample = (noise * ambienceGain + beat * beatGain) * gain * envelope * 0.5
-        return sample.isFinite ? Float(min(Double(Self.peakLimit), max(-Double(Self.peakLimit), sample))) : 0
+        func limited(_ value: Double) -> Float {
+            value.isFinite ? Float(min(Double(Self.peakLimit), max(-Double(Self.peakLimit), value))) : 0
+        }
+        return StereoSample(left: limited(left), right: limited(right))
     }
 }
