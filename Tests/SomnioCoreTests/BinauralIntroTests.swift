@@ -2,6 +2,21 @@ import XCTest
 @testable import SomnioCore
 
 final class BinauralIntroTests: XCTestCase {
+    func testCSVRetainsIntroSelectionForExperimentalAndBaselineSessions() throws {
+        var records = StoredRecords()
+        records.sessions = [PlaybackSession(settings: SoundSettings(binauralIntro: true)), PlaybackSession(settings: SoundSettings())]
+        let date = Date()
+        let range = try ExportDateRange(firstDay: date, lastDay: date)
+        let health = HealthExportResult(coverage: HealthCoverage(range: range, status: .noSamplesOrNotAuthorized, sampleCount: 0), samples: [])
+        let bundle = AnalysisBundle(records: records, health: health, appVersion: "0.3.0", buildVersion: "test")
+        let csv = try XCTUnwrap(bundle.csvTables()["setting_changes.csv"])
+        let lines = csv.components(separatedBy: .newlines).filter { !$0.isEmpty }
+        XCTAssertEqual(lines.count, 3)
+        XCTAssertTrue(lines[0].contains("binauralIntro"))
+        XCTAssertTrue(lines[1].hasSuffix(",true"))
+        XCTAssertTrue(lines[2].hasSuffix(",false"))
+    }
+
     func testLegacySettingsDoNotEnableIntro() throws {
         let old = Data(#"{"mode":"beat","volume":0.2,"timerMinutes":30}"#.utf8)
         XCTAssertFalse(try JSONDecoder().decode(SoundSettings.self, from: old).binauralIntro)
