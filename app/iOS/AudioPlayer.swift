@@ -72,9 +72,7 @@ final class AudioPlayer: ObservableObject {
         guard !active else { return }
         errorMessage = nil; lastEnd = nil; elapsed = 0; stoppingReason = nil
         if settings.binauralIntro {
-            let outputs = AVAudioSession.sharedInstance().currentRoute.outputs
-            let external = outputs.contains { [.headphones, .bluetoothA2DP, .bluetoothLE, .usbAudio].contains($0.portType) }
-            guard external else {
+            guard hasExternalAudioRoute else {
                 errorMessage = "14 Hzの導入には両耳イヤホンが必要です。接続するか、導入をオフにしてください。"
                 state = .failed
                 return
@@ -88,6 +86,7 @@ final class AudioPlayer: ObservableObject {
             let audioSession = AVAudioSession.sharedInstance()
             try audioSession.setCategory(.playback, mode: .default, options: [])
             try audioSession.setActive(true)
+            guard !settings.binauralIntro || hasExternalAudioRoute else { throw PlayerError.headphonesRequired }
             let rate = audioSession.sampleRate
             guard let format = AVAudioFormat(standardFormatWithSampleRate: rate, channels: 2) else { throw PlayerError.invalidFormat }
             let render = RenderState(settings: settings, sampleRate: rate)
@@ -136,5 +135,18 @@ final class AudioPlayer: ObservableObject {
         MPNowPlayingInfoCenter.default().nowPlayingInfo = nil
         try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
     }
-    private enum PlayerError: Error { case invalidFormat }
+    private var hasExternalAudioRoute: Bool {
+        AVAudioSession.sharedInstance().currentRoute.outputs.contains {
+            [.headphones, .bluetoothA2DP, .bluetoothLE, .usbAudio].contains($0.portType)
+        }
+    }
+    private enum PlayerError: LocalizedError {
+        case invalidFormat, headphonesRequired
+        var errorDescription: String? {
+            switch self {
+            case .invalidFormat: return "音声の形式を準備できませんでした。"
+            case .headphonesRequired: return "両耳イヤホンの接続を確認してください。"
+            }
+        }
+    }
 }

@@ -52,10 +52,10 @@ public extension AnalysisBundle {
             for change in session.changes {
                 let value = change.settings
                 rows.append([session.id.uuidString, change.id.uuidString, Self.date(change.at), value.mode.rawValue, String(value.volume),
-                             Self.number(value.timerMinutes), String(value.ambienceGain), String(value.beatGain), String(value.beatRateHz)])
+                             Self.number(value.timerMinutes), String(value.ambienceGain), String(value.beatGain), String(value.beatRateHz), String(value.binauralIntro)])
             }
         }
-        return CSV.table(["sessionID", "id", "at", "mode", "volume", "timerMinutes", "ambienceGain", "beatGain", "beatRateHz"], rows)
+        return CSV.table(["sessionID", "id", "at", "mode", "volume", "timerMinutes", "ambienceGain", "beatGain", "beatRateHz", "binauralIntro"], rows)
     }
     private func feedbackTable() -> String {
         let rows = morningFeedback.map { value in

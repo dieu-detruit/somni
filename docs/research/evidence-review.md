@@ -2,6 +2,8 @@
 
 Reviewed: 2026-11-03. Status: research synthesis, not a clinical protocol or an implemented feature specification.
 
+Follow-up reviewed 2026-11-07: [fatigue and restorative outcomes](fatigue-and-restorative-outcomes.md). Use this outcome-specific update when considering morning recovery; sleep-onset and EEG effects below do not establish fatigue relief.
+
 ## Question and scope
 
 Which interventions are worth testing in an iPhone audio app whose primary outcome is morning restfulness, with Apple Watch supplying retrospective sleep estimates?
