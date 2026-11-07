@@ -1,5 +1,15 @@
 # Verification
 
+## Version 0.3.0 (1005.1)
+
+Verified 2026-11-07 (Asia/Tokyo), binary source `786a2ab`.
+
+- All 50 shared tests passed on macOS, including independent left/right intro frequencies, exact return to baseline after 750 seconds, timer/manual-stop behavior, settings migration and JSON/CSV experiment provenance.
+- Signed iPhone archive with embedded Watch companion passed archive validation.
+- [Distribution run](https://github.com/dieu-detruit/somni/actions/runs/42368016945): Apple reported VALID and IN_BETA_TESTING; Internal automatic distribution enabled.
+- Independent source review led to CSV experiment-field and activated-route validation fixes. Intro persistence and CSV regressions were observed failing before their fixes.
+- Device-level headphone separation, actual loudness, route transitions and subjective next-morning effects remain unverified. Exact crossfade-start amplitude assertions are a test coverage follow-up.
+
 ## Version 0.2.1 (1003.1)
 
 Verified 2026-11-05 (Asia/Tokyo), source `4a86afe`.

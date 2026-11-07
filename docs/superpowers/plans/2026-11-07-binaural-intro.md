@@ -31,4 +31,4 @@ Local limitation: Swift/Xcode are unavailable on this Linux host; macOS GitHub A
 - Independent source review identified a missing CSV experiment column; regression reproduced in run 42367911171 before the fix. Activated-route validation was also added before engine startup.
 - Deliberate scope: 14 Hz only in this release. The introduction is opt-in and uses a fixed rendered-time schedule. Bluetooth/USB users must verify their physical headset and stereo settings because transport does not identify two-ear delivery.
 - Additional direct assertions at the exact start of the crossfade remain a coverage follow-up; current tests check separated frequencies, mid-transition difference, exact baseline return, bounds, timers, manual stop, migration and exports.
-- Final release verification: pending run 42368016945.
+- Final release verification: run 42368016945 passed all 50 tests and signed companion archive checks. Apple confirmed build 1005.1 VALID and IN_BETA_TESTING, with automatic Internal distribution enabled. Binary source: 786a2ab. Implementation and research notes merged into main.
