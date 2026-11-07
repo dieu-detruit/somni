@@ -23,3 +23,12 @@
 3. Review code, run full Swift suite and signed archive in existing TestFlight workflow. Fix any failures, verify Apple processing and internal distribution before claiming delivery.
 
 Local limitation: Swift/Xcode are unavailable on this Linux host; macOS GitHub Actions supplies executable verification.
+
+## Execution record
+
+- Persistence regression reproduced before implementation in run 42367622052: the intro flag was discarded; the remaining 43 tests passed.
+- Initial implementation passed all 49 tests in run 42367817154; that distribution run was canceled before upload to include review fixes.
+- Independent source review identified a missing CSV experiment column; regression reproduced in run 42367911171 before the fix. Activated-route validation was also added before engine startup.
+- Deliberate scope: 14 Hz only in this release. The introduction is opt-in and uses a fixed rendered-time schedule. Bluetooth/USB users must verify their physical headset and stereo settings because transport does not identify two-ear delivery.
+- Additional direct assertions at the exact start of the crossfade remain a coverage follow-up; current tests check separated frequencies, mid-transition difference, exact baseline return, bounds, timers, manual stop, migration and exports.
+- Final release verification: pending run 42368016945.
