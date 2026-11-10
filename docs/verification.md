@@ -1,5 +1,15 @@
 # Verification
 
+## Version 0.3.1 (1006.1)
+
+Verified 2026-11-10 (Asia/Tokyo), binary source `5f8891f`.
+
+- All 56 shared tests passed, including automatic/manual routing, Mono Audio/channel-count fallback, independent requested/generated provenance, v3-history migration, monaural spectrum/channel equality, direct transition-boundary samples, exact baseline return and timer/manual stop.
+- Signed iPhone archive with embedded Watch companion passed archive validation.
+- [Distribution run](https://github.com/dieu-detruit/somni/actions/runs/42762726048): Apple reported VALID and IN_BETA_TESTING; Internal automatic distribution enabled.
+- Independent source review found no critical/important defects. Preference/provenance loss was reproduced by the initial regression before implementation.
+- Actual device routing, headphone separation, perceived loudness and overnight outcome remain device-validation items. Bluetooth/USB inference is explicitly overridable; generated delivery is not a measurement of two-ear exposure.
+
 ## Version 0.3.0 (1005.1)
 
 Verified 2026-11-07 (Asia/Tokyo), binary source `786a2ab`.

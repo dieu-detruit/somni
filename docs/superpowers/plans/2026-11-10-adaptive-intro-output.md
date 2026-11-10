@@ -23,5 +23,5 @@
 
 - Run 42762448291 reproduced loss of introMode/introDelivery before implementation; existing 50 tests passed.
 - Independent review of 2009c0f..5f8891f found no critical/important defects.
-- Release run 42762726048 passed the shared suite and signed companion archive; Apple processing pending. Binary source: 5f8891f; app 0.3.1, build 1006.1.
+- Release run 42762726048 passed all 56 shared tests and signed companion archive. Apple confirmed VALID and IN_BETA_TESTING, Internal automatic distribution enabled. Binary source: 5f8891f; app 0.3.1, build 1006.1. Merged into main.
 - 852-Hz research is documented separately. No pitch preset or efficacy claim added.
