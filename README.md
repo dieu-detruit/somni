@@ -5,7 +5,7 @@ Sleep sounds for iPhone and a morning journal for Apple Watch. Somnio helps you 
 ## Features
 
 - Play ambient sound with optional monaural beats.
-- Optionally start with a 12-minute, 14-Hz binaural introduction using stereo headphones, then automatically return to the selected sound. See [the experimental protocol](docs/binaural-introduction.md).
+- Optionally start with a 12-minute, 14-Hz introduction for headphones or speakers, with automatic/binaural/monaural selection, then return to the selected sound. See [the experimental protocol](docs/binaural-introduction.md).
 - Adjust ambience and beat levels independently, explore beat rates, and set a sleep timer with a gentle fade-out.
 - Record morning restfulness, ease of falling asleep, and notes.
 - Record sleepiness, bedtime, naps, and morning return-to-sleep intervals.

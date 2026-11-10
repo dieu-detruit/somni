@@ -18,3 +18,10 @@
 **Research side task:** Investigate 852 Hz as a carrier/pitch, separately from beat rate. No unapproved change to the nightly sound defaults follows from interest alone.
 
 **Verification environment:** This Linux host has no Swift/Xcode. GitHub macOS CI runs executable tests and archives. Preserve existing 50 tests; add direct crossfade boundary checks in the new mono tests.
+
+## Execution record
+
+- Run 42762448291 reproduced loss of introMode/introDelivery before implementation; existing 50 tests passed.
+- Independent review of 2009c0f..5f8891f found no critical/important defects.
+- Release run 42762726048 passed the shared suite and signed companion archive; Apple processing pending. Binary source: 5f8891f; app 0.3.1, build 1006.1.
+- 852-Hz research is documented separately. No pitch preset or efficacy claim added.

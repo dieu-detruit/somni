@@ -1,5 +1,7 @@
 # Current audio: implementation and evidence
 
+For the optional 14-Hz introduction added after the baseline audited below, see [introduction delivery](../binaural-introduction.md). Audio version 4 supports automatic/binaural/monaural output; the existing baseline layers remain unchanged.
+
 Baseline audit: audio version 1, reviewed 2026-11-03. Later versions add independently adjustable layer gains and beat rate; consult exported audioVersion and setting changes when analyzing them. Source: `app/Shared/AudioSignal.swift`. This audit documents the existing stimulus; it does not change playback.
 
 ## What is actually played
