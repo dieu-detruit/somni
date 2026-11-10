@@ -1,13 +1,16 @@
 import AVFoundation
 import MediaPlayer
 import Combine
+import UIKit
 import SomnioCore
 
 private final class RenderState: @unchecked Sendable {
     private let lock = NSLock()
     private var signal: AudioSignal
     private var announcedEnd = false
-    init(settings: SoundSettings, sampleRate: Double) { signal = AudioSignal(settings: settings, sampleRate: sampleRate) }
+    init(settings: SoundSettings, sampleRate: Double, introDelivery: IntroDelivery) {
+        signal = AudioSignal(settings: settings, sampleRate: sampleRate, introDelivery: introDelivery)
+    }
     var elapsed: Double { lock.lock(); defer { lock.unlock() }; return signal.elapsedSeconds }
     func update(_ settings: SoundSettings) { lock.lock(); signal.update(settings: settings); lock.unlock() }
     func fade() { lock.lock(); signal.beginFadeOut(); lock.unlock() }
@@ -33,6 +36,7 @@ final class AudioPlayer: ObservableObject {
     @Published private(set) var elapsed: Double = 0
     @Published var errorMessage: String?
     @Published private(set) var lastEnd: PlaybackEnd?
+    @Published private(set) var introDelivery: IntroDelivery?
     private let engine = AVAudioEngine()
     private var source: AVAudioSourceNode?
     private var renderState: RenderState?
@@ -61,6 +65,9 @@ final class AudioPlayer: ObservableObject {
                 if let self, self.active, !self.engine.isRunning { self.finish(reason: .failed); self.errorMessage = "音声の構成が変わったため停止しました。もう一度再生できます。" }
             }
         })
+        observers.append(NotificationCenter.default.addObserver(forName: UIAccessibility.monoAudioStatusDidChangeNotification, object: nil, queue: .main) { [weak self] _ in
+            Task { @MainActor in if self?.active == true { self?.finish(reason: .routeChanged) } }
+        })
         MPRemoteCommandCenter.shared().pauseCommand.addTarget { [weak self] _ in
             Task { @MainActor in self?.stop() }; return .success
         }
@@ -70,26 +77,19 @@ final class AudioPlayer: ObservableObject {
     }
     func start(settings: SoundSettings) {
         guard !active else { return }
-        errorMessage = nil; lastEnd = nil; elapsed = 0; stoppingReason = nil
-        if settings.binauralIntro {
-            guard hasExternalAudioRoute else {
-                errorMessage = "14 Hzの導入には両耳イヤホンが必要です。接続するか、導入をオフにしてください。"
-                state = .failed
-                return
-            }
-        }
-        guard let id = store?.begin(settings: settings) else {
-            errorMessage = "再生の記録を保存できませんでした。保存エラーを確認してください。"; state = .failed; return
-        }
-        sessionID = id
+        errorMessage = nil; lastEnd = nil; elapsed = 0; stoppingReason = nil; introDelivery = nil
         do {
             let audioSession = AVAudioSession.sharedInstance()
             try audioSession.setCategory(.playback, mode: .default, options: [])
             try audioSession.setActive(true)
-            guard !settings.binauralIntro || hasExternalAudioRoute else { throw PlayerError.headphonesRequired }
+            let delivery = IntroDelivery.resolve(mode: settings.introMode, headphonesLikely: hasExternalAudioRoute,
+                stereoAvailable: audioSession.outputNumberOfChannels >= 2, monoAudioEnabled: UIAccessibility.isMonoAudioEnabled)
+            guard let id = store?.begin(settings: settings, introDelivery: settings.binauralIntro ? delivery : nil) else { throw PlayerError.recordingUnavailable }
+            sessionID = id
+            introDelivery = settings.binauralIntro ? delivery : nil
             let rate = audioSession.sampleRate
             guard let format = AVAudioFormat(standardFormatWithSampleRate: rate, channels: 2) else { throw PlayerError.invalidFormat }
-            let render = RenderState(settings: settings, sampleRate: rate)
+            let render = RenderState(settings: settings, sampleRate: rate, introDelivery: delivery)
             renderState = render
             let node = AVAudioSourceNode(format: format) { [weak self, render] _, _, frameCount, buffers in
                 if render.render(frameCount, into: buffers) {
@@ -111,7 +111,12 @@ final class AudioPlayer: ObservableObject {
             MPNowPlayingInfoCenter.default().nowPlayingInfo = [MPMediaItemPropertyTitle: "Somnio · " + settings.mode.title,
                 MPMediaItemPropertyArtist: "今夜のやすらぎ", MPNowPlayingInfoPropertyPlaybackRate: 1.0]
         } catch {
-            errorMessage = "音を再生できませんでした。\(error.localizedDescription)"; finish(reason: .failed)
+            errorMessage = "音を再生できませんでした。\(error.localizedDescription)"
+            if sessionID != nil { finish(reason: .failed) }
+            else {
+                state = .failed; introDelivery = nil
+                try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+            }
         }
     }
     func update(settings: SoundSettings) {
@@ -141,11 +146,11 @@ final class AudioPlayer: ObservableObject {
         }
     }
     private enum PlayerError: LocalizedError {
-        case invalidFormat, headphonesRequired
+        case invalidFormat, recordingUnavailable
         var errorDescription: String? {
             switch self {
             case .invalidFormat: return "音声の形式を準備できませんでした。"
-            case .headphonesRequired: return "両耳イヤホンの接続を確認してください。"
+            case .recordingUnavailable: return "再生の記録を保存できませんでした。保存エラーを確認してください。"
             }
         }
     }

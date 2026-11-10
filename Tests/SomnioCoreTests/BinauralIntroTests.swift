@@ -12,9 +12,10 @@ final class BinauralIntroTests: XCTestCase {
         let csv = try XCTUnwrap(bundle.csvTables()["setting_changes.csv"])
         let lines = csv.components(separatedBy: .newlines).filter { !$0.isEmpty }
         XCTAssertEqual(lines.count, 3)
-        XCTAssertTrue(lines[0].contains("binauralIntro"))
-        XCTAssertTrue(lines[1].hasSuffix(",true"))
-        XCTAssertTrue(lines[2].hasSuffix(",false"))
+        let rows = lines.map { $0.components(separatedBy: ",") }
+        let column = try XCTUnwrap(rows[0].firstIndex(of: "binauralIntro"))
+        XCTAssertEqual(rows[1][column], "true")
+        XCTAssertEqual(rows[2][column], "false")
     }
 
     func testLegacySettingsDoNotEnableIntro() throws {

@@ -42,9 +42,9 @@ public extension AnalysisBundle {
     private func sessionTable() -> String {
         let rows = playbackSessions.map { session in
             [session.id.uuidString, session.nightID, Self.date(session.startedAt), Self.date(session.endedAt), String(session.playedSeconds),
-             session.endReason?.rawValue ?? "", session.audioVersion]
+             session.endReason?.rawValue ?? "", session.audioVersion, session.introDelivery?.rawValue ?? ""]
         }
-        return CSV.table(["id", "nightID", "startedAt", "endedAt", "playedSeconds", "endReason", "audioVersion"], rows)
+        return CSV.table(["id", "nightID", "startedAt", "endedAt", "playedSeconds", "endReason", "audioVersion", "introDelivery"], rows)
     }
     private func settingTable() -> String {
         var rows: [[String]] = []
@@ -52,10 +52,10 @@ public extension AnalysisBundle {
             for change in session.changes {
                 let value = change.settings
                 rows.append([session.id.uuidString, change.id.uuidString, Self.date(change.at), value.mode.rawValue, String(value.volume),
-                             Self.number(value.timerMinutes), String(value.ambienceGain), String(value.beatGain), String(value.beatRateHz), String(value.binauralIntro)])
+                             Self.number(value.timerMinutes), String(value.ambienceGain), String(value.beatGain), String(value.beatRateHz), String(value.binauralIntro), value.introMode.rawValue])
             }
         }
-        return CSV.table(["sessionID", "id", "at", "mode", "volume", "timerMinutes", "ambienceGain", "beatGain", "beatRateHz", "binauralIntro"], rows)
+        return CSV.table(["sessionID", "id", "at", "mode", "volume", "timerMinutes", "ambienceGain", "beatGain", "beatRateHz", "binauralIntro", "introMode"], rows)
     }
     private func feedbackTable() -> String {
         let rows = morningFeedback.map { value in

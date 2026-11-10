@@ -65,10 +65,13 @@ private struct TonightView: View {
                     VStack(alignment: .leading, spacing: 10) {
                         Toggle("最初の12分に14 Hzを試す", isOn: $settings.binauralIntro)
                             .disabled(player.active)
-                        Text("両耳イヤホン用。12分のバイノーラル音のあと、30秒かけて下で選んだ音に戻ります。タイマーは導入を含む合計時間です。脳の疲労回復を探る実験です。")
+                        Text("イヤホン・スピーカー両対応。12分の導入のあと、30秒かけて下で選んだ音に戻ります。タイマーは導入を含む合計時間です。脳の疲労回復を探る実験です。")
                             .font(.caption).foregroundStyle(Palette.muted)
                         if settings.binauralIntro {
-                            Text("Bluetooth・USBの出力先も、両耳イヤホンであることを確認してください。端末のモノラルオーディオはオフにします。")
+                            Picker("導入の方式", selection: $settings.introMode) {
+                                ForEach(IntroMode.allCases) { mode in Text(mode.title).tag(mode) }
+                            }.pickerStyle(.segmented).disabled(player.active)
+                            Text("自動は出力先から推定します。Bluetoothスピーカー・片耳で使うときは「モノラル」を選べます。バイノーラルは両耳イヤホン用です。端末がモノラル設定ならモノラルで再生します。")
                                 .font(.caption).foregroundStyle(Palette.muted)
                         }
                     }.padding(20).background(Palette.card, in: RoundedRectangle(cornerRadius: 20))
@@ -96,6 +99,7 @@ private struct TonightView: View {
                     }.disabled(player.state == .stopping)
                     if player.active {
                         if settings.binauralIntro {
+                            if let delivery = player.introDelivery { Text("導入の方式：" + delivery.title).font(.caption).foregroundStyle(Palette.mint) }
                             Text(player.elapsed < AudioSignal.introDuration ? "14 Hzの導入中 · このあと選択した音に戻ります" : player.elapsed < AudioSignal.introDuration + AudioSignal.introTransitionDuration ? "選択した音へ切り替え中" : "導入終了 · 選択した音を再生中")
                                 .font(.caption).foregroundStyle(Palette.mint)
                         }

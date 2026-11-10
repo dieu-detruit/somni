@@ -7,12 +7,13 @@ public struct StereoSample {
 
 /// State belongs to one audio render thread. All time, including fades, follows rendered samples.
 public struct AudioSignal {
-    public static let version = "3"
+    public static let version = "4"
     public static let introDuration: Double = 720
     public static let introTransitionDuration: Double = 30
     public static let peakLimit: Float = 0.22
     public private(set) var settings: SoundSettings
     private let sampleRate: Double
+    private let introDelivery: IntroDelivery
     private var frame: Int64 = 0
     private var random: UInt64 = 0xD1B54A32D192ED03
     private var lowNoise: Double = 0
@@ -40,15 +41,18 @@ public struct AudioSignal {
     }
     public var isFinished: Bool { endFrame.map { frame >= $0 } ?? false }
 
-    public init(settings: SoundSettings, sampleRate: Double = 44_100) {
+    public init(settings: SoundSettings, sampleRate: Double = 44_100, introDelivery: IntroDelivery = .binaural) {
         self.settings = settings.normalized
         ambienceGain = self.settings.ambienceGain; beatGain = self.settings.beatGain; beatRate = self.settings.beatRateHz
         self.sampleRate = sampleRate.isFinite && sampleRate >= 1 ? sampleRate : 44_100
+        self.introDelivery = introDelivery
     }
     public mutating func update(settings: SoundSettings) {
         let introduction = self.settings.binauralIntro
+        let mode = self.settings.introMode
         self.settings = settings.normalized
         self.settings.binauralIntro = introduction
+        self.settings.introMode = mode
     }
     public mutating func beginFadeOut(seconds: Double = 2) {
         guard manualEndFrame == nil else { return }
@@ -81,8 +85,11 @@ public struct AudioSignal {
         }
         let introWeight = settings.binauralIntro ? min(1, max(0, (Self.introDuration + Self.introTransitionDuration - elapsedSeconds) / Self.introTransitionDuration)) : 0
         let baseline = noise * ambienceGain + beat * beatGain
-        let left = (baseline * (1 - introWeight) + sin(introLeftPhase) * 0.13 * introWeight) * gain * envelope * 0.5
-        let right = (baseline * (1 - introWeight) + sin(introRightPhase) * 0.13 * introWeight) * gain * envelope * 0.5
+        let leftTone = sin(introLeftPhase) * 0.13
+        let rightTone = sin(introRightPhase) * 0.13
+        let monoTone = (leftTone + rightTone) * 0.5
+        let left = (baseline * (1 - introWeight) + (introDelivery == .binaural ? leftTone : monoTone) * introWeight) * gain * envelope * 0.5
+        let right = (baseline * (1 - introWeight) + (introDelivery == .binaural ? rightTone : monoTone) * introWeight) * gain * envelope * 0.5
         introLeftPhase = (introLeftPhase + 2 * .pi * 165 / sampleRate).truncatingRemainder(dividingBy: 2 * .pi)
         introRightPhase = (introRightPhase + 2 * .pi * 179 / sampleRate).truncatingRemainder(dividingBy: 2 * .pi)
         frame += 1

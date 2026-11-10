@@ -16,8 +16,9 @@ public struct SoundSettings: Codable, Equatable, Sendable {
     public var beatGain: Double
     public var beatRateHz: Double
     public var binauralIntro: Bool
+    public var introMode: IntroMode
     public init(mode: SoundMode = .ambience, volume: Double = 0.2, timerMinutes: Int? = 30,
-                ambienceGain: Double = 1, beatGain: Double = 1, beatRateHz: Double = 4, binauralIntro: Bool = false) {
+                ambienceGain: Double = 1, beatGain: Double = 1, beatRateHz: Double = 4, binauralIntro: Bool = false, introMode: IntroMode = .automatic) {
         self.mode = mode
         self.volume = volume.isFinite ? min(1, max(0, volume)) : 0
         self.timerMinutes = timerMinutes.map { min(480, max(1, $0)) }
@@ -25,8 +26,9 @@ public struct SoundSettings: Codable, Equatable, Sendable {
         self.beatGain = beatGain.isFinite ? min(1, max(0, beatGain)) : 1
         self.beatRateHz = beatRateHz.isFinite ? min(6, max(1, beatRateHz)) : 4
         self.binauralIntro = binauralIntro
+        self.introMode = introMode
     }
-    private enum CodingKeys: String, CodingKey { case mode, volume, timerMinutes, ambienceGain, beatGain, beatRateHz, binauralIntro }
+    private enum CodingKeys: String, CodingKey { case mode, volume, timerMinutes, ambienceGain, beatGain, beatRateHz, binauralIntro, introMode }
     public init(from decoder: Decoder) throws {
         let values = try decoder.container(keyedBy: CodingKeys.self)
         self.init(mode: try values.decode(SoundMode.self, forKey: .mode),
@@ -35,9 +37,10 @@ public struct SoundSettings: Codable, Equatable, Sendable {
                   ambienceGain: try values.decodeIfPresent(Double.self, forKey: .ambienceGain) ?? 1,
                   beatGain: try values.decodeIfPresent(Double.self, forKey: .beatGain) ?? 1,
                   beatRateHz: try values.decodeIfPresent(Double.self, forKey: .beatRateHz) ?? 4,
-                  binauralIntro: try values.decodeIfPresent(Bool.self, forKey: .binauralIntro) ?? false)
+                  binauralIntro: try values.decodeIfPresent(Bool.self, forKey: .binauralIntro) ?? false,
+                  introMode: try values.decodeIfPresent(IntroMode.self, forKey: .introMode) ?? .automatic)
     }
-    public var normalized: Self { Self(mode: mode, volume: volume, timerMinutes: timerMinutes, ambienceGain: ambienceGain, beatGain: beatGain, beatRateHz: beatRateHz, binauralIntro: binauralIntro) }
+    public var normalized: Self { Self(mode: mode, volume: volume, timerMinutes: timerMinutes, ambienceGain: ambienceGain, beatGain: beatGain, beatRateHz: beatRateHz, binauralIntro: binauralIntro, introMode: introMode) }
     public var timerLabel: String { timerMinutes.map { "\($0)分" } ?? "連続" }
 }
 
@@ -71,11 +74,13 @@ public struct PlaybackSession: Codable, Identifiable, Sendable {
     public var endReason: PlaybackEnd?
     public var changes: [SettingsChange]
     public let audioVersion: String
-    public init(settings: SoundSettings, startedAt: Date = Date()) {
+    public let introDelivery: IntroDelivery?
+    public init(settings: SoundSettings, startedAt: Date = Date(), introDelivery: IntroDelivery? = nil) {
         id = UUID(); nightID = Night.key(for: startedAt); self.startedAt = startedAt
         playedSeconds = 0; changes = [SettingsChange(settings: settings, at: startedAt)]; audioVersion = AudioSignal.version
+        self.introDelivery = settings.binauralIntro ? introDelivery : nil
     }
-    private enum CodingKeys: String, CodingKey { case id, nightID, startedAt, endedAt, playedSeconds, endReason, changes, audioVersion }
+    private enum CodingKeys: String, CodingKey { case id, nightID, startedAt, endedAt, playedSeconds, endReason, changes, audioVersion, introDelivery }
     public init(from decoder: Decoder) throws {
         let values = try decoder.container(keyedBy: CodingKeys.self)
         id = try values.decode(UUID.self, forKey: .id)
@@ -86,6 +91,8 @@ public struct PlaybackSession: Codable, Identifiable, Sendable {
         endReason = try values.decodeIfPresent(PlaybackEnd.self, forKey: .endReason)
         changes = try values.decode([SettingsChange].self, forKey: .changes)
         audioVersion = try values.decodeIfPresent(String.self, forKey: .audioVersion) ?? "1"
+        introDelivery = try values.decodeIfPresent(IntroDelivery.self, forKey: .introDelivery)
+            ?? (audioVersion == "3" && changes.first?.settings.binauralIntro == true ? .binaural : nil)
     }
     public var settings: SoundSettings { changes.last?.settings ?? SoundSettings() }
 }

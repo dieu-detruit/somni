@@ -83,8 +83,8 @@ final class AppStore: ObservableObject {
         catch { errorMessage = "記録を保存できませんでした。\(error.localizedDescription)"; return false }
     }
     func updateSettings(_ settings: SoundSettings) { mutate { $0.settings = settings } }
-    func begin(settings: SoundSettings) -> UUID? {
-        let session = PlaybackSession(settings: settings)
+    func begin(settings: SoundSettings, introDelivery: IntroDelivery? = nil) -> UUID? {
+        let session = PlaybackSession(settings: settings, introDelivery: introDelivery)
         return mutate({ $0.sessions.insert(session, at: 0) }) ? session.id : nil
     }
     func changeSession(_ id: UUID, settings: SoundSettings) {
