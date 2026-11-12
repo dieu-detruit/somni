@@ -108,7 +108,7 @@ final class AudioPlayer: ObservableObject {
                     self.elapsed = self.renderState?.elapsed ?? self.elapsed
                 }
             }
-            MPNowPlayingInfoCenter.default().nowPlayingInfo = [MPMediaItemPropertyTitle: "Somnio · " + settings.mode.title,
+            MPNowPlayingInfoCenter.default().nowPlayingInfo = [MPMediaItemPropertyTitle: "Somnio · " + settings.title,
                 MPMediaItemPropertyArtist: "今夜のやすらぎ", MPNowPlayingInfoPropertyPlaybackRate: 1.0]
         } catch {
             errorMessage = "音を再生できませんでした。\(error.localizedDescription)"

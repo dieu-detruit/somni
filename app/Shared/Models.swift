@@ -62,6 +62,14 @@ public struct SoundSettings: Codable, Equatable, Sendable {
     }
     public var normalized: Self { Self(mode: mode, volume: volume, timerMinutes: timerMinutes, ambienceGain: ambienceGain, beatGain: beatGain, beatRateHz: beatRateHz, binauralIntro: binauralIntro, introMode: introMode, musicGain: musicGain, musicTimbre: musicTimbre, musicBrightness: musicBrightness, musicMotion: musicMotion, toneFrequencyHz: toneFrequencyHz, introGain: introGain) }
     public var timerLabel: String { timerMinutes.map { "\($0)分" } ?? "連続" }
+    public var title: String {
+        var layers: [String] = []
+        if musicGain > 0 { layers.append("音楽") }
+        if mode == .beat && beatGain > 0 { layers.append(beatRateHz == 0 ? "単音" : "うなり") }
+        if ambienceGain > 0 { layers.append("環境音") }
+        if binauralIntro { layers.append("14 Hz導入") }
+        return layers.isEmpty ? "静かな設定" : layers.joined(separator: " + ")
+    }
 }
 
 public enum PlaybackEnd: String, Codable, Sendable {

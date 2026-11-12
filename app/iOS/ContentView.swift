@@ -162,7 +162,7 @@ private struct PlaybackSessionRow: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 7) {
-            Text(session.settings.mode.title).font(.subheadline.weight(.medium))
+            Text(session.settings.title).font(.subheadline.weight(.medium))
             Text(playbackDescription).font(.caption).foregroundStyle(Palette.muted)
             Text(settingsDescription).font(.caption).foregroundStyle(Palette.muted)
             if session.changes.count > 1 {
@@ -261,7 +261,7 @@ private struct SettingsView: View {
                     Text("朝のすっきり感を主な手がかりに、音の好みや睡眠をふりかえる個人用の記録アプリです。少しずつ、心地よい夜を見つけていきましょう。")
                 }
                 Section("音について") {
-                    Text("波音は端末内で生成したノイズです。ビートは180 Hzの音に、選んだ速さの差をつけた音を重ねています。特殊な音源やネット接続は不要です。")
+                    Text("音楽・純音・波のようなノイズを端末内で生成します。音の高さと、うなりの速さは別々に調整できます。お気に入りを保存して、自分の眠りに合う音を探せます。ネット接続は不要です。")
                     Text("睡眠への効果は確立しておらず、感じ方にも個人差があります。診断や治療を行うものではありません。気になったり不快に感じたら停止してください。")
                 }
                 Section("Apple Watch") {
