@@ -1,5 +1,16 @@
 # Verification
 
+## Version 0.4.0 (1008.1)
+
+Verified 2026-11-12 (Asia/Tokyo), binary source `b6e6c5d`.
+
+- All 63 shared tests passed on macOS and in the official Swift 6.0 Linux container. New tests cover legacy defaults, normalized controls, 852-Hz pure-tone spectrum, polyphonic music notes, mute isolation, music beneath the intro, smoothed changes, bounds/timers and favorite disk/JSON/CSV round trips.
+- Signed iPhone archive with embedded Watch companion passed archive validation.
+- [Distribution run](https://github.com/dieu-detruit/somni/actions/runs/43195298116): Apple reported VALID and IN_BETA_TESTING; Internal automatic distribution enabled.
+- Independent source review found no critical/important defects. Legacy labels were corrected to describe actual layers. Initial new-control persistence assertions were observed failing before the fix on macOS and Linux.
+- Production DSP generated warm-pad, soft-keys and music/beat WAV previews. All three contain 45 seconds of stereo PCM and finish with the manual fade to zero; peaks were below the digital limit. This is signal verification, not a claim of pleasantness or recovery.
+- Actual device sound, background playback/battery and the redesigned UI still require personal use. No automatic test measures bedside acoustic exposure or clinical efficacy.
+
 ## Version 0.3.1 (1006.1)
 
 Verified 2026-11-10 (Asia/Tokyo), binary source `5f8891f`.

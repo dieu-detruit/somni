@@ -23,4 +23,4 @@
 - Implementation passed all 63 shared tests on Linux and macOS. The official container was introduced after macOS queue delay; it mounts source read-only with build output inside the disposable container.
 - Independent source review found no critical/important defects. Its minor legacy sound-label issue was corrected using settings-derived descriptions in history, Watch summaries and lock-screen metadata, plus updated help text.
 - Actual production DSP generated 45-second WAV previews for warm pad, soft keys and music with a gentle beat. These support listening review; no automated result establishes pleasantness or efficacy.
-- Release run 43195298116: shared tests and signed iOS/Watch archive passed; Apple processing pending. Binary source b6e6c5d, app 0.4.0 build 1008.1.
+- Release run 43195298116: all 63 shared tests and signed iOS/Watch archive passed; Apple confirmed VALID and IN_BETA_TESTING, Internal automatic distribution enabled. Binary source b6e6c5d, app 0.4.0 build 1008.1. Merged into main.
