@@ -1,10 +1,12 @@
 # Somnio
 
-Sleep sounds for iPhone and a morning journal for Apple Watch. Somnio helps you explore which bedtime sound settings are associated with feeling more rested the next morning.
+A personal sleep synthesizer for iPhone, with a morning journal and sleep records from Apple Watch. Mix sounds that feel comfortable, save your favorites, and explore how they relate to feeling more rested the next morning.
 
 ## Features
 
-- Play ambient sound with optional monaural beats.
+- Mix generated ambient music, pure tones or monaural beats, and wave-like environmental noise independently.
+- Shape musical timbre, brightness and chord movement; adjust tone pitch separately from beat rate, including an 852-Hz pure-tone starting point.
+- Save and delete favorite sound recipes on your device, and adjust sounds while playing with an always-accessible transport.
 - Optionally start with a 12-minute, 14-Hz introduction for headphones or speakers, with automatic/binaural/monaural selection, then return to the selected sound. See [the experimental protocol](docs/binaural-introduction.md).
 - Adjust ambience and beat levels independently, explore beat rates, and set a sleep timer with a gentle fade-out.
 - Record morning restfulness, ease of falling asleep, and notes.
@@ -13,6 +15,8 @@ Sleep sounds for iPhone and a morning journal for Apple Watch. Somnio helps you 
 - Export timestamped JSON and CSV files for personal analysis through the iOS share sheet.
 - Record restfulness on Apple Watch and sync it to iPhone.
 - Keep records on your devices, without an account or analytics service.
+
+See [the personal synthesizer](docs/personal-synthesizer.md) for controls, starting recipes, timing, recording and compatibility.
 
 Audio research has mixed results. Somnio supports personal experimentation and reflection; it does not promise improved sleep or provide medical diagnosis or treatment. Apple Watch sleep stages are estimates.
 

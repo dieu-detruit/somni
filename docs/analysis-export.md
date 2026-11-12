@@ -10,6 +10,7 @@ The date range controls the fresh HealthKit query. Local playback, ratings, jour
 
 ## Data interpretation
 
+- Audio-version-5 settings additionally preserve music gain/timbre/brightness/movement, base tone frequency and introductory gain. `soundPresets` / `sound_presets.csv` represent saved favorites, not evidence that those sounds were played; use timestamped playback settings for exposure. See [synthesizer controls](personal-synthesizer.md).
 - `playbackSessions` preserves sessions, actual known played duration, end reason and timestamped settings changes. Master volume, ambience gain, beat gain, rate and audio version are distinct fields.
 - Intro settings preserve enablement (`binauralIntro`) and requested `introMode` independently of each session's generated `introDelivery`. The latter describes channel generation, not verified sound delivery to both ears. Audio-version-3 intro sessions are known binaural; absent delivery in other versions remains unknown/not applicable. The 720-second intro and 30-second transition use rendered elapsed time, and can be truncated by a timer or stop. See [intro delivery](binaural-introduction.md).
 - `morningFeedback` contains self-reported morning outcomes. It is not an objective recovery measurement.

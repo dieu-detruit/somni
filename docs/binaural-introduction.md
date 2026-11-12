@@ -1,5 +1,7 @@
 # Optional 14-Hz introduction
 
+Version 0.4.0 / audio version 5 adds a music layer and independently adjustable introductory level. Music remains audible throughout the intro and transition; existing noise/ordinary-tone behavior below is preserved. See [the personal synthesizer](personal-synthesizer.md). Control is now under the time-control section on the sound-design screen.
+
 Somnio 0.3.1, audio version 4, supports an optional introduction for headphones and speakers. It is off by default and does not replace saved sound preferences.
 
 Enable **最初の12分に14 Hzを試す** on the Tonight screen before playback, then choose **自動**, **バイノーラル**, or **モノラル**. Binaural sends 165 Hz left and 179 Hz right. Monaural sends the average of both tones equally to both channels, producing a physical 14-Hz beat with a bounded peak. Mono and binaural have different perceived loudness; equal peak limits do not establish equal acoustic exposure.

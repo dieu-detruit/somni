@@ -1,5 +1,6 @@
 # Documentation
 
+- [Personal sleep synthesizer](personal-synthesizer.md): music/tone/environment layers, live sound design, favorites and optional timing control.
 - [14-Hz introduction](binaural-introduction.md): automatic/binaural/monaural output, headphones and speakers, automatic transition and experimental limits.
 - [Sleep synchronization](sleep-synchronization.md): automatic history catch-up, permission behavior and recovery.
 - [Analysis export](analysis-export.md): export scope, timestamps, provenance and sharing for analysis.
