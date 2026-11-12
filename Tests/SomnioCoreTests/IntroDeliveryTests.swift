@@ -83,7 +83,9 @@ final class IntroDeliveryTests: XCTestCase {
         let sessions = try XCTUnwrap(tables["playback_sessions.csv"])
         let changes = try XCTUnwrap(tables["setting_changes.csv"])
         XCTAssertTrue(sessions.contains("introDelivery\r\n")); XCTAssertTrue(sessions.contains(",monaural\r\n"))
-        XCTAssertTrue(changes.contains("introMode\r\n")); XCTAssertTrue(changes.contains(",automatic\r\n"))
+        let rows = changes.components(separatedBy: .newlines).filter { !$0.isEmpty }.map { $0.components(separatedBy: ",") }
+        let column = try XCTUnwrap(rows[0].firstIndex(of: "introMode"))
+        XCTAssertEqual(rows[1][column], "automatic")
     }
 
     func testDeliveryAndPreferenceSurviveSessionRoundTrip() throws {

@@ -12,6 +12,13 @@ final class AppStore: ObservableObject {
     private let disk: RecordDiskStorage
     private var writesBlocked = false
     var settings: SoundSettings { state.settings }
+    var soundPresets: [SoundPreset] { state.soundPresets }
+    @discardableResult func saveSound(name: String, settings: SoundSettings) -> Bool {
+        guard state.soundPresets.count < 50 else { errorMessage = "お気に入りは50件まで保存できます。不要な音を削除してください。"; return false }
+        let value = SoundPreset(name: name, settings: settings)
+        return mutate { $0.soundPresets.insert(value, at: 0) }
+    }
+    func deleteSound(_ id: UUID) { mutate { $0.soundPresets.removeAll { $0.id == id } } }
     var sessions: [PlaybackSession] { state.sessions }
     var feedback: [MorningFeedback] { state.feedback }
     var resetAt: Date? { state.resetAt }

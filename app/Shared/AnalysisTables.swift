@@ -2,7 +2,7 @@ import Foundation
 
 public extension AnalysisBundle {
     func csvTables() -> [String: String] {
-        ["metadata.csv": metadataTable(), "playback_sessions.csv": sessionTable(), "setting_changes.csv": settingTable(),
+        ["metadata.csv": metadataTable(), "playback_sessions.csv": sessionTable(), "setting_changes.csv": settingTable(), "sound_presets.csv": presetTable(),
          "morning_feedback.csv": feedbackTable(), "journal_events.csv": journalTable(),
          "health_sleep_samples.csv": CSV.table(Self.sampleHeader, healthSleepSamples.map(Self.sampleValues)),
          "cached_sleep_records.csv": cachedRecordTable(), "cached_sleep_samples.csv": cachedSampleTable(),
@@ -52,10 +52,22 @@ public extension AnalysisBundle {
             for change in session.changes {
                 let value = change.settings
                 rows.append([session.id.uuidString, change.id.uuidString, Self.date(change.at), value.mode.rawValue, String(value.volume),
-                             Self.number(value.timerMinutes), String(value.ambienceGain), String(value.beatGain), String(value.beatRateHz), String(value.binauralIntro), value.introMode.rawValue])
+                             Self.number(value.timerMinutes), String(value.ambienceGain), String(value.beatGain), String(value.beatRateHz), String(value.binauralIntro), value.introMode.rawValue] + Self.synthValues(value))
             }
         }
-        return CSV.table(["sessionID", "id", "at", "mode", "volume", "timerMinutes", "ambienceGain", "beatGain", "beatRateHz", "binauralIntro", "introMode"], rows)
+        return CSV.table(["sessionID", "id", "at", "mode", "volume", "timerMinutes", "ambienceGain", "beatGain", "beatRateHz", "binauralIntro", "introMode"] + Self.synthHeader, rows)
+    }
+    private static let synthHeader = ["musicGain", "musicTimbre", "musicBrightness", "musicMotion", "toneFrequencyHz", "introGain"]
+    private static func synthValues(_ value: SoundSettings) -> [String] {
+        [String(value.musicGain), value.musicTimbre.rawValue, String(value.musicBrightness), String(value.musicMotion), String(value.toneFrequencyHz), String(value.introGain)]
+    }
+    private func presetTable() -> String {
+        let rows = soundPresets.map { preset -> [String] in
+            let value = preset.settings
+            return [preset.id.uuidString, preset.name, Self.date(preset.createdAt), value.mode.rawValue, String(value.volume), Self.number(value.timerMinutes),
+                    String(value.ambienceGain), String(value.beatGain), String(value.beatRateHz), String(value.binauralIntro), value.introMode.rawValue] + Self.synthValues(value)
+        }
+        return CSV.table(["id", "name", "createdAt", "mode", "volume", "timerMinutes", "ambienceGain", "beatGain", "beatRateHz", "binauralIntro", "introMode"] + Self.synthHeader, rows)
     }
     private func feedbackTable() -> String {
         let rows = morningFeedback.map { value in

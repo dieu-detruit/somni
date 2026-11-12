@@ -7,7 +7,7 @@ public struct StereoSample {
 
 /// State belongs to one audio render thread. All time, including fades, follows rendered samples.
 public struct AudioSignal {
-    public static let version = "4"
+    public static let version = "5"
     public static let introDuration: Double = 720
     public static let introTransitionDuration: Double = 30
     public static let peakLimit: Float = 0.22
@@ -29,6 +29,14 @@ public struct AudioSignal {
     private var ambienceGain: Double = 1
     private var beatGain: Double = 1
     private var beatRate: Double = 4
+    private var toneFrequency: Double = 180
+    private var pureToneMix: Double = 0
+    private var musicGain: Double = 0
+    private var keysMix: Double = 0
+    private var brightness: Double = 0.25
+    private var motion: Double = 0.3
+    private var introGain: Double = 1
+    private var music: AmbientMusic
     public var elapsedSeconds: Double { Double(frame) / sampleRate }
     private var timerFrames: Int64? { settings.timerMinutes.map { Int64(Double($0) * 60 * sampleRate) } }
     private var endFrame: Int64? {
@@ -46,6 +54,12 @@ public struct AudioSignal {
         ambienceGain = self.settings.ambienceGain; beatGain = self.settings.beatGain; beatRate = self.settings.beatRateHz
         self.sampleRate = sampleRate.isFinite && sampleRate >= 1 ? sampleRate : 44_100
         self.introDelivery = introDelivery
+        toneFrequency = self.settings.toneFrequencyHz
+        pureToneMix = self.settings.beatRateHz == 0 ? 1 : 0
+        musicGain = self.settings.musicGain
+        keysMix = self.settings.musicTimbre == .softKeys ? 1 : 0
+        brightness = self.settings.musicBrightness; motion = self.settings.musicMotion; introGain = self.settings.introGain
+        music = AmbientMusic(sampleRate: self.sampleRate)
     }
     public mutating func update(settings: SoundSettings) {
         let introduction = self.settings.binauralIntro
@@ -74,9 +88,17 @@ public struct AudioSignal {
         ambienceGain += (settings.ambienceGain - ambienceGain) * min(1, 1 / (sampleRate * 0.15))
         beatGain += (settings.beatGain - beatGain) * min(1, 1 / (sampleRate * 0.15))
         beatRate += (settings.beatRateHz - beatRate) * min(1, 1 / (sampleRate * 0.25))
-        let beat = (sin(phase1) + sin(phase2)) * 0.13 * beatMix
-        phase1 = (phase1 + 2 * .pi * 180 / sampleRate).truncatingRemainder(dividingBy: 2 * .pi)
-        phase2 = (phase2 + 2 * .pi * (180 + beatRate) / sampleRate).truncatingRemainder(dividingBy: 2 * .pi)
+        toneFrequency += (settings.toneFrequencyHz - toneFrequency) * min(1, 1 / (sampleRate * 0.25))
+        pureToneMix += ((settings.beatRateHz == 0 ? 1.0 : 0.0) - pureToneMix) * min(1, 1 / (sampleRate * 0.25))
+        musicGain += (settings.musicGain - musicGain) * min(1, 1 / (sampleRate * 0.3))
+        keysMix += ((settings.musicTimbre == .softKeys ? 1.0 : 0.0) - keysMix) * min(1, 1 / (sampleRate * 0.5))
+        brightness += (settings.musicBrightness - brightness) * min(1, 1 / (sampleRate * 0.5))
+        motion += (settings.musicMotion - motion) * min(1, 1 / (sampleRate * 0.5))
+        introGain += (settings.introGain - introGain) * min(1, 1 / (sampleRate * 0.3))
+        let pair = (sin(phase1) + sin(phase2)) * 0.13
+        let beat = (pair * (1 - pureToneMix) + sin(phase1) * 0.26 * pureToneMix) * beatMix
+        phase1 = (phase1 + 2 * .pi * toneFrequency / sampleRate).truncatingRemainder(dividingBy: 2 * .pi)
+        phase2 = (phase2 + 2 * .pi * (toneFrequency + beatRate) / sampleRate).truncatingRemainder(dividingBy: 2 * .pi)
         gain += (settings.volume - gain) * min(1, 1 / (sampleRate * 0.15))
         var envelope = min(1, Double(frame) / (sampleRate * 3))
         if let timerFrames { envelope *= min(1, max(0, Double(timerFrames - frame) / (sampleRate * 10))) }
@@ -88,8 +110,9 @@ public struct AudioSignal {
         let leftTone = sin(introLeftPhase) * 0.13
         let rightTone = sin(introRightPhase) * 0.13
         let monoTone = (leftTone + rightTone) * 0.5
-        let left = (baseline * (1 - introWeight) + (introDelivery == .binaural ? leftTone : monoTone) * introWeight) * gain * envelope * 0.5
-        let right = (baseline * (1 - introWeight) + (introDelivery == .binaural ? rightTone : monoTone) * introWeight) * gain * envelope * 0.5
+        let musical = musicGain > 0.0000001 ? music.next(keysMix: keysMix, brightness: brightness, motion: motion) : StereoSample(left: 0, right: 0)
+        let left = (baseline * (1 - introWeight) + (introDelivery == .binaural ? leftTone : monoTone) * introWeight * introGain + Double(musical.left) * musicGain) * gain * envelope * 0.5
+        let right = (baseline * (1 - introWeight) + (introDelivery == .binaural ? rightTone : monoTone) * introWeight * introGain + Double(musical.right) * musicGain) * gain * envelope * 0.5
         introLeftPhase = (introLeftPhase + 2 * .pi * 165 / sampleRate).truncatingRemainder(dividingBy: 2 * .pi)
         introRightPhase = (introRightPhase + 2 * .pi * 179 / sampleRate).truncatingRemainder(dividingBy: 2 * .pi)
         frame += 1

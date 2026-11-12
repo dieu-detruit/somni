@@ -18,12 +18,13 @@ public struct StoredRecords: Codable, Sendable {
     public var feedback: [MorningFeedback] = []
     public var sleep: [NightSleepRecord] = []
     public var journal: [JournalEvent] = []
+    public var soundPresets: [SoundPreset] = []
     public var receivedEvents: [UUID] = []
     public var sleepSync = SleepSyncState()
     public var legacySleepCaches: [NightSleepRecord] = []
     public var resetAt: Date?
     public init() {}
-    private enum CodingKeys: String, CodingKey { case schemaVersion, settings, sessions, feedback, sleep, journal, receivedEvents, resetAt, sleepSync, legacySleepCaches }
+    private enum CodingKeys: String, CodingKey { case schemaVersion, settings, sessions, feedback, sleep, journal, soundPresets, receivedEvents, resetAt, sleepSync, legacySleepCaches }
     public init(from decoder: Decoder) throws {
         let values = try decoder.container(keyedBy: CodingKeys.self)
         settings = try values.decode(SoundSettings.self, forKey: .settings)
@@ -31,6 +32,7 @@ public struct StoredRecords: Codable, Sendable {
         feedback = try values.decode([MorningFeedback].self, forKey: .feedback)
         sleep = try values.decode([NightSleepRecord].self, forKey: .sleep)
         journal = try values.decodeIfPresent([JournalEvent].self, forKey: .journal) ?? []
+        soundPresets = try values.decodeIfPresent([SoundPreset].self, forKey: .soundPresets) ?? []
         receivedEvents = try values.decodeIfPresent([UUID].self, forKey: .receivedEvents) ?? []
         resetAt = try values.decodeIfPresent(Date.self, forKey: .resetAt)
         if let sync = try values.decodeIfPresent(SleepSyncState.self, forKey: .sleepSync) {

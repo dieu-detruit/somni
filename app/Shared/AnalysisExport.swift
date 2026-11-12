@@ -61,6 +61,7 @@ public struct AnalysisBundle: Codable, Sendable {
     public let playbackSessions: [PlaybackSession]
     public let morningFeedback: [MorningFeedback]
     public let journalEvents: [JournalEvent]
+    public let soundPresets: [SoundPreset]
     public let cachedSleepRecords: [NightSleepRecord]
     public let healthSleepSamples: [SleepSample]
     public let syncedSleepSamples: [SleepSample]
@@ -69,7 +70,7 @@ public struct AnalysisBundle: Codable, Sendable {
     public init(records: StoredRecords, health: HealthExportResult, appVersion: String, buildVersion: String) {
         metadata = AnalysisMetadata(appVersion: appVersion, buildVersion: buildVersion)
         healthCoverage = health.coverage; playbackSessions = records.sessions; morningFeedback = records.feedback
-        journalEvents = records.journal; cachedSleepRecords = records.legacySleepCaches
+        journalEvents = records.journal; soundPresets = records.soundPresets; cachedSleepRecords = records.legacySleepCaches
         syncedSleepSamples = records.sleepSync.samples; syncedSleepCoverage = SyncedSleepCoverage(records.sleepSync)
         nightlySleepRecords = records.sleep
         healthSleepSamples = SampleDeduplication.unique(health.samples)

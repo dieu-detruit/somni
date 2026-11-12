@@ -8,7 +8,7 @@ public enum SoundMode: String, Codable, CaseIterable, Identifiable, Sendable {
 }
 
 public struct SoundSettings: Codable, Equatable, Sendable {
-    public static let exploratoryRates: [Double] = [1, 2, 3, 4, 6]
+    public static let exploratoryRates: [Double] = [0, 1, 2, 3, 4, 6, 14, 15, 40]
     public var mode: SoundMode
     public var volume: Double
     public var timerMinutes: Int?
@@ -17,18 +17,32 @@ public struct SoundSettings: Codable, Equatable, Sendable {
     public var beatRateHz: Double
     public var binauralIntro: Bool
     public var introMode: IntroMode
+    public var musicGain: Double
+    public var musicTimbre: MusicTimbre
+    public var musicBrightness: Double
+    public var musicMotion: Double
+    public var toneFrequencyHz: Double
+    public var introGain: Double
     public init(mode: SoundMode = .ambience, volume: Double = 0.2, timerMinutes: Int? = 30,
-                ambienceGain: Double = 1, beatGain: Double = 1, beatRateHz: Double = 4, binauralIntro: Bool = false, introMode: IntroMode = .automatic) {
+                ambienceGain: Double = 1, beatGain: Double = 1, beatRateHz: Double = 4, binauralIntro: Bool = false, introMode: IntroMode = .automatic,
+                musicGain: Double = 0, musicTimbre: MusicTimbre = .warmPad, musicBrightness: Double = 0.25, musicMotion: Double = 0.3,
+                toneFrequencyHz: Double = 180, introGain: Double = 1) {
         self.mode = mode
         self.volume = volume.isFinite ? min(1, max(0, volume)) : 0
         self.timerMinutes = timerMinutes.map { min(480, max(1, $0)) }
         self.ambienceGain = ambienceGain.isFinite ? min(1, max(0, ambienceGain)) : 1
         self.beatGain = beatGain.isFinite ? min(1, max(0, beatGain)) : 1
-        self.beatRateHz = beatRateHz.isFinite ? min(6, max(1, beatRateHz)) : 4
+        self.beatRateHz = beatRateHz.isFinite ? min(40, max(0, beatRateHz)) : 4
         self.binauralIntro = binauralIntro
         self.introMode = introMode
+        self.musicGain = musicGain.isFinite ? min(1, max(0, musicGain)) : 0
+        self.musicTimbre = musicTimbre
+        self.musicBrightness = musicBrightness.isFinite ? min(1, max(0, musicBrightness)) : 0.25
+        self.musicMotion = musicMotion.isFinite ? min(1, max(0, musicMotion)) : 0.3
+        self.toneFrequencyHz = toneFrequencyHz.isFinite ? min(1000, max(80, toneFrequencyHz)) : 180
+        self.introGain = introGain.isFinite ? min(1, max(0, introGain)) : 1
     }
-    private enum CodingKeys: String, CodingKey { case mode, volume, timerMinutes, ambienceGain, beatGain, beatRateHz, binauralIntro, introMode }
+    private enum CodingKeys: String, CodingKey { case mode, volume, timerMinutes, ambienceGain, beatGain, beatRateHz, binauralIntro, introMode, musicGain, musicTimbre, musicBrightness, musicMotion, toneFrequencyHz, introGain }
     public init(from decoder: Decoder) throws {
         let values = try decoder.container(keyedBy: CodingKeys.self)
         self.init(mode: try values.decode(SoundMode.self, forKey: .mode),
@@ -38,9 +52,15 @@ public struct SoundSettings: Codable, Equatable, Sendable {
                   beatGain: try values.decodeIfPresent(Double.self, forKey: .beatGain) ?? 1,
                   beatRateHz: try values.decodeIfPresent(Double.self, forKey: .beatRateHz) ?? 4,
                   binauralIntro: try values.decodeIfPresent(Bool.self, forKey: .binauralIntro) ?? false,
-                  introMode: try values.decodeIfPresent(IntroMode.self, forKey: .introMode) ?? .automatic)
+                  introMode: try values.decodeIfPresent(IntroMode.self, forKey: .introMode) ?? .automatic,
+                  musicGain: try values.decodeIfPresent(Double.self, forKey: .musicGain) ?? 0,
+                  musicTimbre: try values.decodeIfPresent(MusicTimbre.self, forKey: .musicTimbre) ?? .warmPad,
+                  musicBrightness: try values.decodeIfPresent(Double.self, forKey: .musicBrightness) ?? 0.25,
+                  musicMotion: try values.decodeIfPresent(Double.self, forKey: .musicMotion) ?? 0.3,
+                  toneFrequencyHz: try values.decodeIfPresent(Double.self, forKey: .toneFrequencyHz) ?? 180,
+                  introGain: try values.decodeIfPresent(Double.self, forKey: .introGain) ?? 1)
     }
-    public var normalized: Self { Self(mode: mode, volume: volume, timerMinutes: timerMinutes, ambienceGain: ambienceGain, beatGain: beatGain, beatRateHz: beatRateHz, binauralIntro: binauralIntro, introMode: introMode) }
+    public var normalized: Self { Self(mode: mode, volume: volume, timerMinutes: timerMinutes, ambienceGain: ambienceGain, beatGain: beatGain, beatRateHz: beatRateHz, binauralIntro: binauralIntro, introMode: introMode, musicGain: musicGain, musicTimbre: musicTimbre, musicBrightness: musicBrightness, musicMotion: musicMotion, toneFrequencyHz: toneFrequencyHz, introGain: introGain) }
     public var timerLabel: String { timerMinutes.map { "\($0)分" } ?? "連続" }
 }
 

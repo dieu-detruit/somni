@@ -14,7 +14,7 @@ struct ContentView: View {
     @EnvironmentObject private var player: AudioPlayer
     var body: some View {
         TabView {
-            TonightView().tabItem { Label("今夜", systemImage: "moon.stars") }
+            TonightView().tabItem { Label("音づくり", systemImage: "waveform") }
             HistoryView().tabItem { Label("朝の記録", systemImage: "sun.horizon") }
             JournalView().tabItem { Label("日中の記録", systemImage: "square.and.pencil") }
             SettingsView().tabItem { Label("このアプリ", systemImage: "slider.horizontal.3") }
@@ -36,46 +36,12 @@ private struct TonightView: View {
                 VStack(alignment: .leading, spacing: 28) {
                     HStack { Text("S O M N I O").font(.caption.weight(.semibold)).tracking(2); Spacer(); Text(Date(), style: .date).font(.caption) }.foregroundStyle(Palette.muted)
                     VStack(alignment: .leading, spacing: 9) {
-                        Text("明日の自分に、\nやさしい夜を。").font(.system(size: 33, weight: .medium, design: .serif)).lineSpacing(6)
-                        Text("音を選んで、ゆっくりおやすみ。\n朝のすっきり感を、一緒に見つけていこう。").font(.subheadline).foregroundStyle(Palette.muted).lineSpacing(5)
+                        Text("あなたの眠りの音を。").font(.system(size: 33, weight: .medium, design: .serif)).lineSpacing(6)
+                        Text("音楽、うなり、環境音。\n聴きながら混ぜて、心地いい音を見つけよう。").font(.subheadline).foregroundStyle(Palette.muted).lineSpacing(5)
                     }
-                    ZStack {
-                        Circle().stroke(Palette.mint.opacity(0.07), lineWidth: 1).frame(width: 230, height: 230)
-                        Circle().stroke(Palette.mint.opacity(0.12), lineWidth: 1).frame(width: 190, height: 190)
-                        Circle().fill(RadialGradient(colors: [Palette.mint.opacity(0.15), .clear], center: .center, startRadius: 0, endRadius: 100)).frame(width: 210, height: 210)
-                        Image(systemName: player.active ? "waveform" : "moon.zzz").font(.system(size: 57, weight: .ultraLight)).foregroundStyle(Palette.mint)
-                            .symbolEffect(.variableColor, options: .repeating, isActive: player.active)
-                    }.frame(maxWidth: .infinity).accessibilityHidden(true)
-                    VStack(spacing: 16) {
-                        ForEach(SoundMode.allCases) { mode in
-                            Button { settings.mode = mode } label: {
-                                HStack(spacing: 14) {
-                                    Image(systemName: mode == .ambience ? "water.waves" : "waveform.path").font(.title2).frame(width: 30)
-                                    VStack(alignment: .leading, spacing: 5) {
-                                        Text(mode.title).font(.subheadline.weight(.semibold))
-                                        Text(mode.detail).font(.caption).foregroundStyle(Palette.muted)
-                                    }
-                                    Spacer()
-                                    Image(systemName: settings.mode == mode ? "checkmark.circle.fill" : "circle").foregroundStyle(settings.mode == mode ? Palette.mint : Palette.muted)
-                                }.foregroundStyle(.white).padding(17).background(settings.mode == mode ? Palette.mint.opacity(0.09) : Palette.card, in: RoundedRectangle(cornerRadius: 18))
-                                    .overlay(RoundedRectangle(cornerRadius: 18).stroke(settings.mode == mode ? Palette.mint.opacity(0.5) : .clear))
-                            }.buttonStyle(.plain).accessibilityAddTraits(settings.mode == mode ? .isSelected : [])
-                        }
-                    }
-                    VStack(alignment: .leading, spacing: 10) {
-                        Toggle("最初の12分に14 Hzを試す", isOn: $settings.binauralIntro)
-                            .disabled(player.active)
-                        Text("イヤホン・スピーカー両対応。12分の導入のあと、30秒かけて下で選んだ音に戻ります。タイマーは導入を含む合計時間です。脳の疲労回復を探る実験です。")
-                            .font(.caption).foregroundStyle(Palette.muted)
-                        if settings.binauralIntro {
-                            Picker("導入の方式", selection: $settings.introMode) {
-                                ForEach(IntroMode.allCases) { mode in Text(mode.title).tag(mode) }
-                            }.pickerStyle(.segmented).disabled(player.active)
-                            Text("自動は出力先から推定します。Bluetoothスピーカー・片耳で使うときは「モノラル」を選べます。バイノーラルは両耳イヤホン用です。端末がモノラル設定ならモノラルで再生します。")
-                                .font(.caption).foregroundStyle(Palette.muted)
-                        }
-                    }.padding(20).background(Palette.card, in: RoundedRectangle(cornerRadius: 20))
+                    SynthPresetsView(settings: $settings, isPlaying: player.active)
                     AudioLayersView(settings: $settings)
+                    IntroControlView(settings: $settings, isPlaying: player.active)
                     VStack(alignment: .leading, spacing: 18) {
                         HStack { Label("スリープタイマー", systemImage: "timer"); Spacer(); Text(settings.timerLabel).foregroundStyle(Palette.mint) }.font(.subheadline)
                         HStack(spacing: 8) {
@@ -89,26 +55,13 @@ private struct TonightView: View {
                         HStack { Image(systemName: "speaker.wave.1"); Slider(value: $settings.volume, in: 0...1).accessibilityLabel("音の音量"); Image(systemName: "speaker.wave.2") }.foregroundStyle(Palette.muted)
                         Text("小さな音から。端末の音量も調整してください。\n終了前の10秒で、静かにフェードアウトします。").font(.caption).foregroundStyle(Palette.muted).lineSpacing(4)
                     }.padding(20).background(Palette.card, in: RoundedRectangle(cornerRadius: 20))
-                    Button {
-                        if player.active { player.stop() } else { player.start(settings: settings) }
-                    } label: {
-                        HStack(spacing: 10) {
-                            Image(systemName: player.active ? "stop.fill" : "play.fill")
-                            Text(player.state == .stopping ? "ゆっくり停止中…" : player.active ? "音を止める" : "おやすみを始める")
-                        }.font(.headline).frame(maxWidth: .infinity).padding(.vertical, 20).foregroundStyle(Palette.background).background(Palette.mint, in: Capsule())
-                    }.disabled(player.state == .stopping)
-                    if player.active {
-                        if settings.binauralIntro {
-                            if let delivery = player.introDelivery { Text("導入の方式：" + delivery.title).font(.caption).foregroundStyle(Palette.mint) }
-                            Text(player.elapsed < AudioSignal.introDuration ? "14 Hzの導入中 · このあと選択した音に戻ります" : player.elapsed < AudioSignal.introDuration + AudioSignal.introTransitionDuration ? "選択した音へ切り替え中" : "導入終了 · 選択した音を再生中")
-                                .font(.caption).foregroundStyle(Palette.mint)
-                        }
-                        HStack { Image(systemName: "waveform"); Text("再生中 · " + DisplayFormat.duration(player.elapsed)); Spacer(); Text("ロックしても再生") }.font(.caption).foregroundStyle(Palette.muted)
-                    } else if let end = player.lastEnd { Text(end.title).font(.caption).foregroundStyle(Palette.muted) }
-                    if let error = player.errorMessage { Text(error).font(.footnote).foregroundStyle(.orange) }
-                    Text("ビートの感じ方には個人差があります。\n朝の休息感を記録して、自分に合う夜を探しましょう。").font(.caption).foregroundStyle(Palette.muted).lineSpacing(4)
+                    Text("心地よかった音は、お気に入りに。\n朝の頭のすっきり感も、あとで振り返れます。").font(.caption).foregroundStyle(Palette.muted).lineSpacing(4)
                 }.padding(24)
             }.background(Palette.background).toolbar(.hidden, for: .navigationBar)
+                .safeAreaInset(edge: .bottom) {
+                    SynthTransportView(settings: $settings).padding(.horizontal, 24).padding(.vertical, 12)
+                        .background(Palette.background)
+                }
         }
         .onAppear { settings = store.settings }
         .onChange(of: settings) { _, value in store.updateSettings(value); player.update(settings: value) }
