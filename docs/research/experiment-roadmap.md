@@ -1,5 +1,7 @@
 # Experiment roadmap
 
+Product direction updated 2026-11-12: the app's main interaction is a [personal sleep synthesizer](../personal-synthesizer.md), with music, tone/beat and environmental layers, saved favorites and optional control recipes. The research methods below are optional tools behind that experience; they do not impose a trial workflow or rank subjective comfort below protocol compliance.
+
 Status: proposals for discussion, not implemented features. Updated 2026-11-03.
 
 ## Objective

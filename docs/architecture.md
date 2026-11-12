@@ -2,7 +2,7 @@
 
 Somnio consists of an iOS 17+ SwiftUI app, a watchOS 10+ companion, and a shared Foundation package.
 
-- iPhone generates ambient sound and optional monaural beats through AVFoundation. Timers and fades follow rendered audio samples; interruptions and route changes stop playback.
+- iPhone generates independent ambient music, wave-like noise, and pure-tone/monaural-beat layers through AVFoundation, with an optional timed binaural/monaural introduction. Timers and fades follow rendered audio samples; interruptions and route changes stop playback.
 - Local records contain presets, playback sessions/settings changes, morning restfulness and ease-of-sleep ratings, notes, and imported sleep summaries.
 - HealthKit sleep records are read retrospectively, with sources kept separate and Apple Watch preferred. Sleep duration merges overlapping asleep intervals and excludes in-bed-only time. The selected overnight window is 18:00–12:00; this is an app convention, not a universal definition of a night.
 - WatchConnectivity transfers summaries and durable morning-feedback events. The Watch app does not independently classify sleep or run an all-night sensor session.
@@ -10,6 +10,10 @@ Somnio consists of an iOS 17+ SwiftUI app, a watchOS 10+ companion, and a shared
 - GitHub Actions in this repository runs validation and TestFlight distribution. Signing credentials are repository secrets. No deployment credentials belong in documentation or source files.
 
 The development research priority is morning restfulness rather than maximizing an estimated sleep stage. See the [experiment roadmap](research/experiment-roadmap.md).
+
+## Personal synthesizer
+
+The sound-design screen exposes independent layers and starter recipes, with saved favorites in the lightweight user-record file. Audio version 5 adds polyphonic generated music, timbre/brightness/movement controls, base pitch selection, rate-zero pure tones and adjustable intro gain. Music can continue beneath the timed introduction. Settings changes retain all sound controls for analysis; JSON and CSV also include favorites as saved preferences, separately from playback exposure. See [the personal synthesizer](personal-synthesizer.md).
 
 ## Version 0.2 additions
 

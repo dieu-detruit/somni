@@ -16,3 +16,11 @@
 4. Independently review; run full Swift tests and signed iOS/Watch archive; verify Apple VALID/internal TestFlight distribution; merge and document.
 
 **Review focus:** Preserved user settings and historical decoding; no clipping/discontinuity at control changes; music audible with intro and all tone controls independent; favorites survive restart/delete/export; no hidden preset changes while playing. Local Linux has no Swift/Xcode, so macOS CI supplies executable verification. Device listening remains necessary for comfort and real sound level; automated tests do not validate recovery.
+
+## Execution record
+
+- Initial regression reproduced discarded settings on macOS and in the official Swift 6.0 Linux container: 57 tests, four expected missing-field assertions; pre-existing tests passed.
+- Implementation passed all 63 shared tests on Linux and macOS. The official container was introduced after macOS queue delay; it mounts source read-only with build output inside the disposable container.
+- Independent source review found no critical/important defects. Its minor legacy sound-label issue was corrected using settings-derived descriptions in history, Watch summaries and lock-screen metadata, plus updated help text.
+- Actual production DSP generated 45-second WAV previews for warm pad, soft keys and music with a gentle beat. These support listening review; no automated result establishes pleasantness or efficacy.
+- Release run 43195298116: shared tests and signed iOS/Watch archive passed; Apple processing pending. Binary source b6e6c5d, app 0.4.0 build 1008.1.
